@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: elh-service
+
+server:
+  port: 45003
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

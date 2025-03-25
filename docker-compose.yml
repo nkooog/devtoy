@@ -1,0 +1,79 @@
+services:
+  eureka-service:
+    image: eureka-service # image 이름
+    build:
+      context: ./BE/eureka-service  # Dockerfile이 있는 디렉토리
+      dockerfile: Dockerfile.local  # Dockerfile명
+    container_name: eureka-service  # container명
+    ports:
+      - "45001:45001" # 서비스 포트
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app_network # 네트워크 연결
+
+  gw-service:
+    image: gw-service
+    build:
+      context: ./BE/gw-service
+      dockerfile: Dockerfile.local
+    container_name: gw-service
+    ports:
+      - "45000:45000" # 서비스 포트
+      - "45100:45100" # debug port
+    depends_on:
+      - eureka-service # 의존성 설정
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker # Docker 실행 시 docker 프로파일 사용
+    networks:
+      - app_network # 네트워크 연결
+
+  redis-service:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: [ "redis-server", "--port", "45020" ]  # 보안 적용
+    networks:
+      - app_network
+    ports:
+      - "45020:45020" # 포트 매핑
+
+  crm-service:
+    image: crm-service
+    build:
+      context: BE/crm-service
+      dockerfile: Dockerfile.local
+    container_name: crm-service
+    ports:
+      - "45002:45002" # 서비스 포트
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app_network # 네트워크 연결
+    depends_on:
+      - eureka-service # 의존성 설정
+
+  elh-service:
+    image: elh-service
+    build:
+      context: BE/elh-service
+      dockerfile: Dockerfile.local
+    container_name: elh-service
+    ports:
+      - "45003:45003" # 서비스 포트
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app_network # 네트워크 연결
+    depends_on:
+      - eureka-service # 의존성 설정
+
+volumes:
+  redis_data:
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge

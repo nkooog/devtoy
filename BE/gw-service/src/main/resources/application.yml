@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: gw-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]' :
+            allowedOrigins:
+              - "http://localhost:45000"
+            allowedMethods: "GET,POST,PUT,DELETE"
+            allowedHeaders: "Authorization"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id : crm-service
+          uri: lb://crm-service
+          predicates:
+            - Path=/crm/**
+        - id: elh-service
+          uri: lb://elh-service
+          predicates:
+            - Path=/elh/**
+
+server:
+  port: 45000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

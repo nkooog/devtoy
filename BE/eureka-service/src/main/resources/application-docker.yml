@@ -1,0 +1,3 @@
+eureka:
+  instance:
+    hostname: eureka-service  # 컨테이너 내부에서 사용될 고정된 호스트네임

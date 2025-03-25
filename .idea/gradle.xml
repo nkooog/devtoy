@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/BE/crm-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/BE/crm-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/BE/elh-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/BE/elh-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/BE/eureka-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/BE/eureka-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/BE/gw-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/BE/gw-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
