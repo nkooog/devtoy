@@ -7,8 +7,6 @@ services:
     container_name: eureka-service  # container명
     ports:
       - "45001:45001" # 서비스 포트
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
     networks:
       - app_network # 네트워크 연결
 
@@ -47,6 +45,8 @@ services:
       dockerfile: Dockerfile.local
     container_name: crm-service
     ports:
+      - "45102:45102" # debug 포트
+    expose:  
       - "45002:45002" # 서비스 포트
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -62,6 +62,8 @@ services:
       dockerfile: Dockerfile.local
     container_name: elh-service
     ports:
+      - "45103:45103" # debug 포트
+    expose:  
       - "45003:45003" # 서비스 포트
     environment:
       - SPRING_PROFILES_ACTIVE=docker
