@@ -22,7 +22,7 @@ services:
     depends_on:
       - eureka-service # 의존성 설정
     environment:
-      - SPRING_PROFILES_ACTIVE=docker # Docker 실행 시 docker 프로파일 사용
+      EUREKA_URL : http://eureka-service:45001/eureka/  # Docker 네트워크에서는 고정된 도메인 사용
     networks:
       - app_network # 네트워크 연결
 
@@ -49,11 +49,9 @@ services:
     expose:  
       - "45002:45002" # 서비스 포트
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      EUREKA_URL : http://eureka-service:45001/eureka/
     networks:
       - app_network # 네트워크 연결
-    depends_on:
-      - eureka-service # 의존성 설정
 
   elh-service:
     image: elh-service
@@ -66,11 +64,9 @@ services:
     expose:  
       - "45003:45003" # 서비스 포트
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      EUREKA_URL : http://eureka-service:45001/eureka/
     networks:
       - app_network # 네트워크 연결
-    depends_on:
-      - eureka-service # 의존성 설정
 
 volumes:
   redis_data:
