@@ -1,6 +1,14 @@
 spring:
   application:
     name: crm-service
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    view-names: th/*
+    check-template-location: true
+  h2:
+    console:
+      enabled: false
 
 server:
   port: 45002
@@ -9,6 +17,8 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
