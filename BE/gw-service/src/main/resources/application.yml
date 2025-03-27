@@ -25,6 +25,12 @@ spring:
           predicates:
             - Path=/elh/**
 
+
+logging:
+  level:
+    org.springframework.web: DEBUG           # Spring Web의 HTTP 요청과 응답 로그
+    org.springframework.cloud.gateway: DEBUG # Spring Cloud Gateway의 요청과 응답 로그
+
 server:
   port: 45000
 
@@ -32,7 +38,8 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-
+    service-url:
+      defaultZone: ${EUREKA_URL}
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
