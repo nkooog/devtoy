@@ -1,14 +1,14 @@
 spring:
-  application:
-    name: crm-service
   thymeleaf:
-    prefix: classpath:/templates/
+    prefix: classpath:/templates
     suffix: .html
-    view-names: th/*
+    view-names: /th/*
     check-template-location: true
-  h2:
-    console:
-      enabled: false
+
+  web:
+    resources:
+      static-locations: file:/app/share_resources/
+
 
 server:
   port: 45002
@@ -22,3 +22,9 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
+
+
+logging:
+  level:
+    org:
+      thymeleaf: debug

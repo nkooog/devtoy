@@ -19,7 +19,7 @@ spring:
         - id : crm-service
           uri: lb://crm-service
           predicates:
-            - Path=/crm/**
+            - Path=/crm/**, /css/**, /images/**
         - id: elh-service
           uri: lb://elh-service
           predicates:

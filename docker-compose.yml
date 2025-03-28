@@ -50,8 +50,11 @@ services:
       - "45002:45002" # 서비스 포트
     environment:
       EUREKA_URL : http://eureka-service:45001/eureka/
+      spring_profiles_active : dev
     networks:
       - app_network # 네트워크 연결
+    volumes:
+      - "F:/share_resources:/app/share_resources"  # 로컬 static 폴더를 컨테이너에 마운트
 
   elh-service:
     image: elh-service
