@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM100Mapper">
+	
+	<select id="SYSM100SEL01" parameterType="SYSM100VO" resultType="SYSM100VO">
+			SELECT
+				   tenant_id                AS tenantId
+				  ,dmn_cd					AS dmnCd
+			      ,SP_TYP_CD				AS spTypCd
+				  ,tenant_st_cd			 	AS tenantStCd
+				  ,tenant_st_rsn_cd			AS tenantStRsnCd
+				  ,fmnm						AS fmnm
+				  ,fmnm_eng					AS fmnmEng
+				  ,repr_nm					AS reprNm
+				  ,repr_nm_eng				AS reprNmEng
+				  ,svc_typ_cd				AS svcTypCd
+				  ,usr_ac_cnt				AS usrAcCnt
+				  ,eml_snd_grps_addr		AS emlSndGrpsAddr
+				  ,mling_cd 				AS mlingCd
+				  ,org_lvl_cd				AS orgLvlCd
+				  ,svc_cont_dd				AS svcContDd
+				  ,svc_bltn_dd				AS svcBltnDd
+				  ,svc_expry_dd				AS svcExpryDd
+				  ,svc_trmn_dd				AS svcTrmnDd
+			FROM t_tenant_info
+			WHERE 1=1
+			 <if test='dmnCd != null and dmnCd != ""'>
+			 AND dmn_cd =  #{dmnCd}
+			 </if>
+			 <if test='svcTypCd != null and svcTypCd != ""'>
+
+			 AND svc_typ_cd =  #{svcTypCd}
+			 </if>
+			 <if test='tenantStCd != null and tenantStCd != ""'>
+			 AND tenant_st_cd =  #{tenantStCd}
+			 </if>
+			 <if test='fmnm != null and fmnm != ""'>
+			 AND fmnm like  #{fmnm}||'%'
+			 </if>
+			 <if test='tenantId != null and tenantId != ""'>
+			 AND tenant_id like  #{tenantId}||'%'
+			 </if>
+			order by tenant_id
+	</select>	
+
+	<update id="SYSM100UPT02" parameterType="java.util.List">
+	 <foreach collection="list" item="item" separator=";">
+			UPDATE t_tenant_info
+			SET   tenant_st_cd       =  #{item.tenantStCd}
+				, tenant_st_rsn_cd   =  #{item.tenantStRsnCd}
+				, lst_corc_dtm 		= CURRENT_TIMESTAMP
+				, lst_corpr_id   	=  #{item.lstCorprId}
+				, lst_corpr_org_cd  =  #{item.lstCorprOrgCd}
+  		    WHERE tenant_id    =  #{item.tenantId}
+     </foreach>
+	</update>
+
+	<insert id="SYSM100INS99" parameterType="java.util.HashMap">
+		INSERT INTO T_UNFY_CNTC_HIST
+		( TENANT_ID ,UNFY_CNTC_HIST_NO ,IOB_DV_CD ,CNTC_CHNL_CD ,CNTC_PATH_MGNT_ITEM_CD ,CNTC_PATH_CD ,CNTC_CUST_ID ,CNTC_CUST_ID_PATH_CD,
+		CNTC_TEL_DV_CD
+			,CNTC_CUST_NM ,CNTCMN_DV_CD ,CNTC_TEL_NO ,CNTC_DT ,CNTC_INCL_DTM ,CNTC_CNNT_DTM ,CNTC_END_DTM ,CNTC_CPLT_DTM ,CNSLR_ID ,CNSLR_BLNG_ORG_CD
+			,PHREC_KEY ,CALL_ID ,CNTC_RSLT_CD ,CNTC_RSLT_DTLS_CD ,TRCL_YN ,REG_DTM ,REGR_ID ,REGR_BLNG_ORG_CD ,LST_CORC_DTM ,LST_CORPR_ID ,LST_CORPR_BLNG_ORG_CD )
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(  'CMH', #{item.unfyCntcHistNo}::integer, #{item.iobDvCd}, #{item.cntcChnlCd}, #{item.cntcPathMgntItemCd}, #{item.cntcPathCd}, #{item.cntcCustId}, #{item.cntcCustIdPathCd},
+			#{item.cntcTelDvCd},
+			#{item.cntcCustNm}, #{item.cntcmnDvCd}, #{item.cntcTelNo}, #{item.cntcDt}, #{item.cntcInclDtm}, #{item.cntcCnntDtm}, #{item.cntcEndDtm}, #{item.cntcCpltDtm}, #{item.cnslrId},
+			#{item.cnslrBlngOrgCd}, #{item.phrecKey}, #{item.callId}, #{item.cntcRsltCd}, #{item.cntcRsltDtlsCd}, #{item.trclYn}, to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'),
+			'000000', '1', to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'), '000000', '1' )
+		</foreach>
+	</insert>
+
+	<insert id="SYSM100INS98" parameterType="java.util.HashMap">
+		INSERT INTO T_TEL_CNSL_HIST
+		( TENANT_ID ,UNFY_CNTC_HIST_NO ,TEL_CNSL_HIST_SEQ ,TEL_CNSL_INCL_DTM ,TEL_CNSL_CNNT_DTM ,TEL_CNSL_END_DTM ,TEL_CNSL_CPLT_DTM ,CNSL_TYP_CD
+		,CNSL_TITE ,CNSL_CTT ,CNSLR_ID ,CNSL_RSLT_CD ,REG_DTM ,REGR_ID ,REGR_BLNG_ORG_CD ,LST_CORC_DTM ,LST_CORPR_ID ,LST_CORPR_BLNG_ORG_CD )
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			( 'CMH', #{item.unfyCntcHistNo}::integer, 1, #{item.telCnslInclDtm}, #{item.telCnslCnntDtm}, #{item.telCnslEndDtm}, #{item.telCnslCpltDtm},
+			#{item.cnslTypCd}, #{item.cnslTite}, #{item.cnslCtt}, #{item.cnslrId}, #{item.cnslRsltCd}, to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'),
+			'000000', '1', to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'), '000000', '1' )
+		</foreach>
+	</insert>
+
+	<!-- 콜백-->
+	<select id="SYSM100INS97"  parameterType="java.util.HashMap"  resultType="integer">
+		INSERT INTO t_caback_acpn
+		( tenant_id
+			,CABACK_ACPN_NO
+			,CABACK_ID
+			,CABACK_REG_DTM
+			,CABACK_ALTM_DTM
+			,INCL_TEL_NO
+			,CABACK_REQ_TELNO
+			,CNSLR_ID
+			,CNSLR_ORG_CD
+			,CABACK_PROC_ST_CD
+			,CABACK_PROC_ST_CD_NM
+			,CABACK_INCL_RPSNO
+			,auto_cplt_yn
+			,CABACK_INFW_SHP_CD
+			,CABACK_INFW_SHP_CD_NM
+			,VCE_CABACK_PLY_TM
+			,VCE_CABACK_FILE_PATH
+			,VCE_CABACK_YN
+			,STT_TRNF_YN
+			,STT_TXT
+			,ALRM_CNFM_YN
+			,reg_dtm
+			,regr_org_cd
+			,regr_id
+			,LST_CORC_DTM
+			,LST_CORPR_ORG_CD
+			,LST_CORPR_ID
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(  'CMH',
+			--(SELECT COALESCE(Max(caback_acpn_no), 0) + 1 FROM  t_caback_acpn  WHERE  tenant_id = 'CMH'),
+			#{item.cabackAcpnNo}::integer,
+			 #{item.cabackId},
+			 #{item.cabackRegDtm},
+			 #{item.cabackAltmDtm},
+			 #{item.inclTelNo},
+			 #{item.cabackReqTelno},
+			 #{item.cnslrId},
+			 #{item.cnslrOrgCd},
+			 #{item.cabackProcStCd},
+			 #{item.cabackProcStCdNm},
+			 #{item.cabackInclRpsno},
+			 #{item.autoCpltYn},
+			 #{item.cabackInfwShpCd},
+			 #{item.cabackInfwShpCdNm},
+			 #{item.vceCabackPlyTm},
+			 #{item.vceCabackFilePath},
+			 #{item.vceCabackYn},
+			 #{item.sttTrnfYn},
+			 #{item.sttTxt},
+			 #{item.alrmCnfmYn},
+			 to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'),
+			 '1', '000000',
+			 to_timestamp(#{item.regDtm}::varchar, 'YYYY-MM-DD HH24:MI:SS'),
+			#{item.cnslrOrgCd}, #{item.cnslrId} )
+		</foreach>
+		RETURNING CABACK_ACPN_NO
+	</select>
+
+	<update id="SYSM100UPT96" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE T_UNFY_CNTC_HIST
+			SET   CHNL_ACPN_NO       =  #{item.chnlAcpnNo}::integer
+			WHERE tenant_id    =  'CMH'
+			and UNFY_CNTC_HIST_NO  =  #{item.unfyCntcHistNo}::integer
+		</foreach>
+	</update>
+<!-- 콜백-->
+
+	<update id="SYSM100UPT95" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update T_TEL_CNSL_HIST
+			set cnsl_typ_cd =  #{item.cnslTypCd}
+			where tenant_id ='BMH'
+			and UNFY_CNTC_HIST_NO  =  #{item.unfyCntcHistNo}::integer
+		</foreach>
+	</update>
+
+
+	<update id="SYSM100UPT94" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update t_unfy_cntc_hist
+			set CNTC_PATH_CD =  #{item.cntcPathCd}
+			where tenant_id ='YJI'
+			and UNFY_CNTC_HIST_NO  =  #{item.unfyCntcHistNo}::integer
+		</foreach>
+	</update>
+
+
+
+	<insert id="SYSM100INS91" parameterType="java.util.HashMap">
+		INSERT INTO t_cnsl_typ_cd
+		(
+		tenant_id
+		,cnsl_typ_cd
+		,cnsl_typ_lvl_nm
+		,prs_lvl_cd
+		,hgrk_cnsl_typ_cd
+		,data_cre_yn
+		,use_dv_cd
+		,svc_opr_typ_grp_cd
+		,svc_opr_typ_cd
+		,svc_opr_hgrk_typ_grp_cd
+		,reg_dtm
+		,regr_id
+		,regr_org_cd
+		,lst_corc_dtm
+		,lst_corpr_id
+		,lst_corpr_org_cd
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(
+			'BMH'
+			, #{item.cnslTypCd}
+			, #{item.cnslTypLvlNm}
+			, #{item.prsLvlCd}
+			, #{item.hgrkCnslTypCd}
+			, #{item.dataCreYn}
+			, 'Y'
+			,'3010'
+			,#{item.svcOprTypCd}
+			,#{item.svcOprHgrkTypGrpCd}
+			, CURRENT_TIMESTAMP
+			,'000000'
+			,'1'
+			, CURRENT_TIMESTAMP
+			,'000000'
+			,'1'
+			)
+		</foreach>
+	</insert>
+</mapper>

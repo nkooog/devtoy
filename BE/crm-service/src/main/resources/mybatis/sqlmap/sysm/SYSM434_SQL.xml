@@ -1,0 +1,1146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM434Mapper">
+
+    <select id="SYSM434SEL01" parameterType="SYSM434VO" resultType="SYSM434VO">
+		SELECT
+			ROW_NUMBER() OVER (ORDER BY t1.reg_dt DESC, t1.schd_no DESC) AS seq
+			,t1.tenant_id        	AS tenantId
+		    ,t1.reg_dt           	AS regDt
+		    ,t1.reg_dt           	AS regDtFormat
+		    ,t1.schd_no          	AS schdNo
+		    ,t1.sndg_dv          	AS sndgDv
+		    ,t1.tmpl_mgnt_no     	AS tmplMgntNo
+		    ,t1.tmpl_nm          	AS tmplNm
+		    ,t1.sndg_rsv_dt      	AS sndgRsvDt
+		    ,t1.sndg_rsv_dt      	AS sndgRsvDtFormat
+		    ,t1.sqnc_pat_dv_cd   	AS sqncPatDvCd
+		    ,t1.sndg_tgt_ncnt    	AS sndgTgtNcnt
+		    ,t1.sndg_cplt_ncnt   	AS sndgCpltNcnt
+		    ,t1.sndg_totz_ncnt   	AS sndgTotzNcnt
+		    ,t1.sndg_scss_ncnt   	AS sndgScssNcnt
+		    ,t1.sndg_fail_ncnt   	AS sndgFailNcnt
+		    ,t1.proc_st_cd       	AS procStCd
+		    ,t3.com_cd_nm 			AS procStCdNm
+		    ,t1.can_rsn_cd       	AS canRsnCd
+		    ,t1.can_rsn_ctt      	AS canRsnCtt
+		    ,t1.apnd_file_nm1			AS apndFileNm1	
+			,t1.apnd_file_idx_nm1		AS apndFileIdxNm1
+			,t1.apnd_file_psn1			AS apndFilePsn1
+			,t1.apnd_file_nm2			AS apndFileNm2
+			,t1.apnd_file_idx_nm2		AS apndFileIdxNm2
+			,t1.apnd_file_psn2			AS apndFilePsn2
+			,t1.apnd_file_nm3			AS apndFileNm3
+			,t1.apnd_file_idx_nm3		AS apndFileIdxNm3
+			,t1.apnd_file_psn3			AS apndFilePsn3
+		    ,t1.regr_id          	AS regrId
+		    ,t1.regr_org_cd      	AS regrOrgCd
+		    ,t1.lst_corpr_id    	AS lstCorprId
+		    ,t1.lst_corpr_org_cd 	AS lstCorprOrgCd
+		    ,t1.abolmn_id        	AS abolmnId
+		    ,t1.abolmn_org_cd    	AS abolmnOrgCd
+		    ,to_char(t1.reg_dtm, 'YYYY-MM-DD HH24:MI:SS.MS') 		AS regDtm		    
+		    ,to_char(t1.abol_dtm, 'YYYY-MM-DD HH24:MI:SS.MS') 		AS abolDtm
+		    ,to_char(t1.lst_corc_dtm, 'YYYY-MM-DD HH24:MI:SS.MS') 	AS lstCorcDtm
+		    ,COALESCE(COUNT(t2.tenant_id),0) 										AS totCnt
+			,COALESCE(COUNT(CASE WHEN t2.sms_st_cd = '1' THEN t2.sms_st_cd END),0) 	AS regCnt
+			,COALESCE(COUNT(CASE WHEN t2.sms_st_cd = '2' THEN t2.sms_st_cd END),0) 	AS assignCnt
+		FROM t_sms_sndg_schd t1 LEFT JOIN t_sms_sndg_tgt_info t2
+			ON t1.tenant_id  = t2.tenant_id 
+			AND t1.reg_dt = t2.reg_dt 
+			AND t1.schd_no = t2.schd_no
+			AND t2.sms_st_cd  not in ('3','9')
+			AND t2.sms_rslt_cd is null
+			AND t2.abol_dtm is null
+			LEFT JOIN t_com_cd t3 on t1.proc_st_cd = t3.com_cd  and t3.mgnt_item_cd = 'C0102'
+        <where>
+        	AND t1.tenant_id = #{tenantId}
+	        <choose>
+	            <when test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(searchType)'>
+	                <if test='1==searchType'>
+	                    AND t1.reg_dt Between #{startDate} and #{endDate}
+	                </if>
+	                <if test='2==searchType'>
+	                    AND t1.sndg_rsv_dt Between #{startDate} and  #{endDate}
+	                </if>
+	            </when>
+	            <otherwise>
+	                AND (t1.reg_dt Between #{startDate} and #{endDate}
+	                     OR t1.sndg_rsv_dt Between #{startDate} and  #{endDate})
+	            </otherwise>
+	        </choose>
+	        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(sndgDv)'>
+	            AND  t1.sndg_dv =  #{sndgDv}
+	        </if>
+	        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(procStCd)'>
+	            AND   t1.proc_st_cd = #{procStCd}
+	        </if>
+	        <if test='regDt != null and regDt != ""'>
+	        	AND t1.reg_dt = #{regDt}
+	        </if>
+	        AND t1.abol_dtm is null
+		</where>
+		GROUP BY t1.tenant_id, t1.reg_dt , t1.schd_no, t3.com_cd_nm
+    </select>
+    
+    <select id="SYSM434SEL02" parameterType="SYSM434VO" resultType="SYSM434VO">
+		SELECT
+			ROW_NUMBER() OVER (ORDER BY t1.sndg_rsv_sqnc) AS seq 
+			,t1.tenant_id 			AS tenantId
+			,t1.reg_dt 				AS regDt
+			,t1.schd_no 			AS schdNo
+			,t1.sndg_rsv_sqnc 		AS sndgRsvSqnc
+			,t1.sndg_str_tm 		AS sndgStrTm
+			,to_char(t1.sndg_cplt_dtm,'YYYY-MM-DD HH24:MI:SS') AS sndgCpltDtm
+			,t1.sndg_tgt_ncnt 		AS sndgTgtNcnt
+			,t1.sndg_scss_ncnt 		AS sndgScssNcnt
+			,t1.sndg_fail_ncnt 		AS sndgFailNcnt
+			,t1.sqnc_proc_st_cd 	AS sqncProcStCd
+			,t1.reg_dtm 			AS regDtm
+			,t1.regr_id 			AS regrId
+			,t1.regr_org_cd 		AS regrOrgCd
+			,t1.lst_corc_dtm 		AS lstCorcDtm
+			,t1.lst_corpr_id 		AS lstCorprId
+			,t1.lst_corpr_org_cd 	AS lstCorprOrgCd
+			,t1.abol_dtm 			AS abolDtm
+			,t1.abolmn_id 			AS abolmnId
+			,t1.abolmn_org_cd 		AS abolmnOrgCd
+			,t2.sndg_rsv_dt			AS sndgRsvDt
+		FROM t_sms_sndg_rsv_sqnc t1 LEFT JOIN t_sms_sndg_schd t2
+				ON t1.tenant_id = t2.tenant_id 
+				AND t1.reg_dt = t2.reg_dt 
+				AND t1.schd_no = t2.schd_no 
+		WHERE t1.tenant_id = #{tenantId}
+		AND t1.reg_dt = #{regDt}
+		AND t1.schd_no = #{schdNo}
+		AND t1.sqnc_proc_st_cd != '6'
+		AND t1.abol_dtm is null
+    </select>
+     
+    <select id="SYSM434SEL0201" parameterType="SYSM434VO" resultType="int">
+    	SELECT
+			COALESCE(MAX(t1.sndg_rsv_sqnc),0) + 1 AS sndg_rsv_sqnc
+		FROM t_sms_sndg_rsv_sqnc t1
+		WHERE t1.tenant_id = #{tenantId}
+		AND t1.reg_dt = #{regDt}
+		AND t1.schd_no = #{schdNo}
+		<!-- AND t1.abol_dtm is null -->
+    </select>
+    
+    <!-- 발송 고객 -->
+	<select id="SYSM434SEL03" parameterType="SYSM434VO" resultType="SYSM434VO">
+			SELECT 		
+				t1.tenant_id 					AS tenantId,
+				t1.reg_dt 						AS regDt,
+				t1.schd_no 						AS schdNo,
+				t1.sndg_tgt_cust_seq 			AS sndgTgtCustSeq,
+				t1.tmpl_mgnt_no 				AS tmplMgntNo,
+				t1.sndg_rsv_sqnc 				AS sndgRsvSqnc,
+				t1.cust_rcgn_path_cd 			AS custRcgnPathCd,
+				t1.cust_rcgn_cd 				AS custRcgnCd,
+				t1.cust_id 						AS custId,
+				t1.cust_nm 						AS custNm,
+				t1.cust_nm_srchkey1 			AS custNmSrchkey1,
+				t1.cust_nm_srchkey2 			AS custNmSrchkey2,
+				t1.gndr_cd 						AS gndrCd,
+				t1.agelrg_cd 					AS agelrgCd,
+				t1.recvr_tel_cnty_cd 			AS recvrTelCntyCd,
+				t1.recvr_tel_no 				AS recvrTelNo,
+				t1.recvr_tel_no_srchkey 		AS recvrTelNoSrchkey,
+				t1.dpch_no 						AS dpchNo,
+				t1.sndg_ctt 					AS sndgCtt,
+				t1.sndg_rsv_dt 					AS sndgRsvDt,
+				t1.sndg_rsv_tm 					AS sndgRsvTm,
+				to_char(t1.sndg_cplt_tm,'YYYY-MM-DD HH24:MI:SS') AS sndgCpltTm,
+				t1.sms_st_cd 					AS smsStCd,
+				COALESCE(t2.com_cd_nm,'')		AS smsStNm,
+				t1.sms_rslt_cd 					AS smsRsltCd,
+				COALESCE(t3.com_cd_nm,'')		AS smsRsltNm,
+				t1.sms_sndg_rslt_key 			AS smsSndgRsltKey,
+				t1.reg_dtm 						AS regDtm,
+				t1.regr_id 						AS regrId,
+				t1.regr_org_cd 					AS regrOrgCd,
+				(SELECT COM_CD_NM FROM T_COM_CD X WHERE X.COM_CD = t1.gndr_cd AND MGNT_ITEM_CD='C0172') gndrNm
+			FROM   t_sms_sndg_tgt_info t1
+				LEFT JOIN t_com_cd t2
+					ON t1.sms_st_cd = t2.com_cd and t2.mgnt_item_cd = 'C0109'
+				LEFT JOIN t_com_cd t3
+					ON t1.sms_rslt_cd = t3.com_cd and t3.mgnt_item_cd = 'C0110'
+			<where>
+				<if test='tenantId != null and tenantId != ""'>
+					AND t1.tenant_id = #{tenantId}
+				</if>
+				<if test='custId != null and custId != ""'>
+					AND t1.cust_id = #{custId}
+				</if>
+				<if test='regDt != null and regDt != ""'>
+		        	AND t1.reg_dt = #{regDt}
+		        </if>
+				<if test='schdNo != null and schdNo != ""'>
+					AND t1.schd_no = #{schdNo}
+				</if>
+				<if test='sndgRsvSqnc != null and sndgRsvSqnc != ""'>
+					AND t1.sndg_rsv_sqnc = #{sndgRsvSqnc}
+				</if>
+				
+				<if test='searchType != null and searchType != ""'>
+					<choose>
+						<when test='search != null and search != ""'>
+							<choose>
+								<when test='searchType == "1"'>
+									AND t1.cust_id = #{search}
+								</when>
+								<when test='searchType == "3" and search != null and search != ""'>
+									AND (t1.cust_nm = #{search} or t1.cust_nm_srchkey1 = #{search} or t1.cust_nm_srchkey2 = #{search})
+								</when>
+								<when test='searchType == "4"'>
+									AND replace(t1.dpch_no,'-','') = replace(#{search},'-','')
+								</when>
+								<when test='searchType == "5"'>
+									AND replace(t1.recvr_tel_no,'-','') = replace(#{search},'-','')
+								</when>
+							</choose>
+						</when>
+						<when test='searchGndrCd != null and searchGndrCd != ""'>
+							AND t1.gndr_cd = #{searchGndrCd}
+						</when>
+					</choose>
+				</if>
+				<if test='searchSMSStcd != null and searchSMSStcd != ""'>
+					AND t1.sms_st_cd = #{searchSMSStcd}
+				</if>
+				<if test='searchSNSSbdgDv != null and searchSNSSbdgDv != ""'>
+					AND t1.sms_rslt_cd = #{searchSNSSbdgDv}
+				</if>
+				AND t1.abol_dtm is NULL							<!-- 삭제 되지 않은 건 -->
+				-- AND coalesce(t1.sms_st_cd,'') != '3' 		<!-- 발송 제외한 등록/배정/발송 취소 조회 -->
+				-- AND t1.sms_rslt_cd is NULL					<!-- 발송 결과가 없는 건 -->
+			</where>
+			ORDER BY t1.sms_st_cd DESC,t1.sndg_tgt_cust_seq DESC
+	</select>
+    
+    <select id="SYSM434SEL0301" parameterType="SYSM434VO"  resultType="SYSM434VO">
+    	SELECT
+    		COUNT(tenant_id) AS totCnt
+    	FROM t_sms_sndg_tgt_info
+    	WHERE tenant_id = #{tenantId}
+    	AND reg_dt = #{regDt}
+    	AND schd_no = #{schdNo}
+    	AND abol_dtm is null
+    </select>
+    
+	<select id="SYSM434SEL0302" parameterType="SYSM434VO"  resultType="int">
+	    SELECT
+			COUNT(tenant_id) AS totCnt
+		FROM t_sms_sndg_rsv_sqnc
+		WHERE tenant_id = #{tenantId}
+			AND reg_dt = #{regDt}
+			AND schd_no = #{schdNo}
+			<if test='sndgRsvSqnc != null and sndgRsvSqnc != ""'>
+				AND sndg_rsv_sqnc = #{sndgRsvSqnc}
+			</if>
+			AND sqnc_proc_st_cd = '4'
+			AND abol_dtm is null
+	</select>
+	
+    <select id="SYSM434SEL04" parameterType="SYSM434VO" resultType="SYSM434VO">
+		SELECT 		
+				t1.tenant_id 					AS tenantId,
+				t1.reg_dt 						AS regDt,
+				t1.schd_no 						AS schdNo,
+				t1.sndg_tgt_cust_seq 			AS sndgTgtCustSeq,
+				t1.tmpl_mgnt_no 				AS tmplMgntNo,
+				t1.sndg_rsv_sqnc 				AS sndgRsvSqnc,
+				t1.cust_rcgn_path_cd 			AS custRcgnPathCd,
+				t1.cust_rcgn_cd 				AS custRcgnCd,
+				t1.cust_id 						AS custId,
+				t1.cust_nm 						AS custNm,
+				t1.cust_nm_srchkey1 			AS custNmSrchkey1,
+				t1.cust_nm_srchkey2 			AS custNmSrchkey2,
+				t1.gndr_cd 						AS gndrCd,
+				t1.agelrg_cd 					AS agelrgCd,
+				t1.recvr_tel_cnty_cd 			AS recvrTelCntyCd,
+				t1.recvr_tel_no 				AS recvrTelNo,
+				t1.recvr_tel_no_srchkey 		AS recvrTelNoSrchkey,
+				t1.dpch_no 						AS dpchNo,
+				t1.sndg_ctt 					AS sndgCtt,
+				t1.sndg_rsv_dt 					AS sndgRsvDt,
+				t1.sndg_rsv_tm 					AS sndgRsvTm,
+				to_char(t1.sndg_cplt_tm,'YYYY-MM-DD HH24:MI:SS') AS sndgCpltTm,
+				t1.sms_st_cd 					AS smsStCd,
+				COALESCE(t2.com_cd_nm,'')		AS smsStNm,
+				t1.sms_rslt_cd 					AS smsRsltCd,
+				COALESCE(t3.com_cd_nm,'')		AS smsRsltNm,
+				t1.sms_sndg_rslt_key 			AS smsSndgRsltKey,
+				t1.reg_dtm 						AS regDtm,
+				t1.regr_id 						AS regrId,
+				t1.regr_org_cd 					AS regrOrgCd
+			FROM   t_sms_sndg_tgt_info t1
+				LEFT JOIN t_com_cd t2
+					ON t1.sms_st_cd = t2.com_cd and t2.mgnt_item_cd = 'C0109'
+				LEFT JOIN t_com_cd t3
+					ON t1.sms_rslt_cd = t3.com_cd and t3.mgnt_item_cd = 'C0110'
+			<where>
+				<if test='tenantId != null and tenantId != ""'>
+					AND t1.tenant_id = #{tenantId}
+				</if>
+				<if test='custId != null and custId != ""'>
+					AND t1.cust_id = #{custId}
+				</if>
+				<if test='regDt != null and regDt != ""'>
+		        	AND t1.reg_dt = #{regDt}
+		        </if>
+				<if test='schdNo != null and schdNo != ""'>
+					AND t1.schd_no = #{schdNo}
+				</if>
+				<if test='sndgRsvSqnc != null and sndgRsvSqnc != ""'>
+					AND t1.sndg_rsv_sqnc = #{sndgRsvSqnc}
+				</if>
+				AND t1.abol_dtm is NULL
+				AND coalesce(t1.sms_st_cd,'') = '3'
+			</where>
+			ORDER BY t1.reg_dtm DESC
+	</select>
+	
+	<!-- 차수 배정 대상 카운트 -->
+	<select id="SYSM434SEL0501" parameterType="SYSM434VO" resultType="SYSM434VO">
+			SELECT 
+				COUNT(t1.tenant_id) AS totCnt
+				,COUNT(CASE WHEN t1.sms_st_cd = '1' THEN t1.sms_st_cd END) AS regCnt
+				,COUNT(CASE WHEN t1.sms_st_cd = '2' THEN t1.sms_st_cd END) AS assignCnt
+			FROM t_sms_sndg_tgt_info t1 left JOIN t_sms_sndg_schd t2
+				ON t1.tenant_id = t2.tenant_id AND t1.reg_dt = t2.reg_dt AND t1.schd_no = t2.schd_no
+			WHERE t1.tenant_id = #{tenantId}
+			AND t1.schd_no = #{schdNo}
+			AND t1.reg_dt = #{regDt}
+			AND t1.sms_st_cd  NOT IN ('3','9')
+			AND t1.sms_rslt_cd is NULL
+			AND t1.abol_dtm is NULL
+	</select>
+	
+	<select id="SYSM434SEL06" parameterType="SYSM434VO" resultType="LGIN000VO">
+		/* SYSM434_SQL.SYSM434SEL06 */
+		SELECT A.TENANT_ID   AS tenantId
+		     , A.USR_NM	     AS usrNm 
+		     , A.USR_ID		 AS usrId
+		     , A.MBPH_NO
+		     , A.ORG_CD	     AS orgCd
+		     , C.ORG_NM      AS orgNm
+		     , B.CTI_AGEN_ID AS ctiAgenId
+		  FROM T_USR_INFO_MGNT A INNER JOIN T_TELE_SET_INF B ON A.TENANT_ID = B.TENANT_ID AND A.USR_ID = B.USR_ID
+		  						 INNER JOIN T_ORG_CD C       ON A.TENANT_ID = C.TENANT_ID AND A.ORG_CD = C.ORG_CD
+        <where>
+        	<if test='tenantId != null and tenantId != ""'>
+        		AND A.TENANT_ID = #{tenantId}
+        	</if>
+        	<if test='usrId != null and usrId != ""'>
+        		AND A.USR_ID = #{usrId}
+        	</if>
+        	<if test='searchType != null and searchType != ""'>
+        		<if test='searchType == "2"'>
+        			AND A.USR_NM LIKE '%'||#{search}||'%'  
+        		</if>
+        		<if test='searchType == "3" || searchType == "4" || searchType == "5" || searchType == "6"'>
+        			AND A.MBPH_NO LIKE '%'||#{search}||'%'  
+        		</if>
+        	</if>
+        </where>		  						 
+		
+	</select>
+	
+	<select id="SYSM434SEL07" parameterType="LGIN000VO" resultType="LGIN000VO">
+		/* SYSM434_SQL.SYSM434SEL06 */
+		SELECT A.TENANT_ID   AS tenantId
+		     , A.USR_NM	     AS usrNm 
+		     , A.USR_ID		 AS usrId
+		     , A.MBPH_NO
+		     , A.ORG_CD	     AS orgCd
+		     , C.ORG_NM      AS orgNm
+		     , B.CTI_AGEN_ID AS ctiAgenId
+		  FROM T_USR_INFO_MGNT A INNER JOIN T_TELE_SET_INF B ON A.TENANT_ID = B.TENANT_ID AND A.USR_ID = B.USR_ID
+		  						 INNER JOIN T_ORG_CD C       ON A.TENANT_ID = C.TENANT_ID AND A.ORG_CD = C.ORG_CD
+        <where>
+        	<if test='tenantId != null and tenantId != ""'>
+        		AND A.TENANT_ID = #{tenantId}
+        	</if>
+        	<if test='usrId != null and usrId != ""'>
+        		AND A.USR_ID = #{usrId}
+        	</if>
+        </where>		  						 
+		
+	</select>
+	
+    <insert id="SYSM434INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_sms_sndg_schd
+            (
+            tenant_id
+            ,reg_dt
+            ,schd_no
+            ,sndg_dv
+            ,tmpl_mgnt_no
+            ,tmpl_nm
+            ,sndg_rsv_dt
+            ,sqnc_pat_dv_cd
+            ,sndg_tgt_ncnt
+            ,sndg_cplt_ncnt
+            ,sndg_totz_ncnt
+            ,sndg_scss_ncnt
+            ,sndg_fail_ncnt
+            ,proc_st_cd
+            ,can_rsn_cd
+            ,can_rsn_ctt
+            ,apnd_file_nm1	
+			,apnd_file_idx_nm1	
+			,apnd_file_psn1
+			,apnd_file_nm2	
+			,apnd_file_idx_nm2	
+			,apnd_file_psn2
+			,apnd_file_nm3	
+			,apnd_file_idx_nm3	
+			,apnd_file_psn3
+            ,reg_dtm
+            ,regr_id
+            ,regr_org_cd
+            ,lst_corc_dtm
+            ,lst_corpr_id
+            ,lst_corpr_org_cd
+            )
+            VALUES
+            (#{item.tenantId}
+            ,#{item.regDt}
+            ,(SELECT COALESCE(MAX(schd_no::NUMERIC), 0) + 1 FROM t_Sms_sndg_schd WHERE tenant_id = #{item.tenantId} AND reg_dt = #{item.regDt})
+            ,#{item.sndgDv}
+            ,#{item.tmplMgntNo}
+            ,#{item.tmplNm}
+            ,#{item.sndgRsvDt}
+            ,#{item.sqncPatDvCd}
+            ,#{item.sndgTgtNcnt}
+            ,#{item.sndgCpltNcnt}
+            ,#{item.sndgTotzNcnt}
+            ,#{item.sndgScssNcnt}
+            ,#{item.sndgFailNcnt}
+            ,#{item.procStCd}
+            ,#{item.canRsnCd}
+            ,#{item.canRsnCtt}
+            ,#{item.apndFileNm1}	
+			,#{item.apndFileIdxNm1}	
+			,#{item.apndFilePsn1}
+			,#{item.apndFileNm2}
+			,#{item.apndFileIdxNm2}	
+			,#{item.apndFilePsn2}
+			,#{item.apndFileNm3}
+			,#{item.apndFileIdxNm3}	
+			,#{item.apndFilePsn3}
+            ,CURRENT_TIMESTAMP
+            ,#{item.regrId}
+            ,#{item.regrOrgCd}
+            ,CURRENT_TIMESTAMP
+            ,#{item.lstCorprId}
+            ,#{item.lstCorprOrgCd}
+            )
+        </foreach>
+    </insert>
+    
+    <insert id="SYSM434INS02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+			INSERT INTO t_sms_sndg_rsv_sqnc(
+				tenant_id,
+				reg_dt,
+				schd_no,
+				sndg_rsv_sqnc,
+				sndg_str_tm,
+				sndg_cplt_dtm,
+				sndg_tgt_ncnt,
+				sndg_scss_ncnt,
+				sndg_fail_ncnt,
+				sqnc_proc_st_cd,
+				reg_dtm,
+				regr_id,
+				regr_org_cd,
+				lst_corc_dtm,
+				lst_corpr_id,
+				lst_corpr_org_cd
+			) VALUES (
+				#{tenantId},
+				#{regDt},
+				#{schdNo},
+				#{sndgRsvSqnc},
+				#{sndgStrTm},
+				#{sndgCpltDtm},
+				#{sndgTgtNcnt},
+				#{sndgScssNcnt},
+				#{sndgFailNcnt},
+				#{sqncProcStCd},
+				CURRENT_TIMESTAMP,
+				#{regrId},
+				#{regrOrgCd},
+				CURRENT_TIMESTAMP,
+				#{lstCorprId},
+				#{lstCorprOrgCd}
+			)      
+        </foreach>
+	</insert>
+	
+	<insert id="SYSM434INS0201" parameterType="SYSM434VO">
+			INSERT INTO t_sms_sndg_rsv_sqnc(
+				tenant_id,
+				reg_dt,
+				schd_no,
+				sndg_rsv_sqnc,
+				sndg_tgt_ncnt,				
+				sndg_scss_ncnt,
+				sndg_fail_ncnt,				
+				sqnc_proc_st_cd,
+				reg_dtm,
+				regr_id,
+				regr_org_cd,
+				lst_corc_dtm,
+				lst_corpr_id,
+				lst_corpr_org_cd
+             ) VALUES (
+				#{tenantId},
+				#{regDt},
+				#{schdNo},
+				#{sndgRsvSqnc},
+				#{sndgTgtNcnt},
+				#{sndgScssNcnt},
+				#{sndgFailNcnt},
+				#{sqncProcStCd},
+				CURRENT_TIMESTAMP,
+				#{regrId},
+				#{regrOrgCd},
+				CURRENT_TIMESTAMP,
+				#{lstCorprId},
+				#{lstCorprOrgCd}
+            )
+	</insert>
+    
+	<insert id="SYSM434INS03" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_sms_sndg_tgt_info(
+	            tenant_id
+	            , reg_dt
+	            , schd_no
+	            , sndg_tgt_cust_seq
+	            , sndg_rsv_sqnc
+	            , tmpl_mgnt_no
+	            , cust_rcgn_path_cd
+	            , cust_rcgn_cd
+	            , cust_id
+	            , cust_nm
+				, cust_nm_srchkey1
+				, cust_nm_srchkey2
+				, gndr_cd
+				, agelrg_cd
+				, recvr_tel_cnty_cd
+				, recvr_tel_no
+				, recvr_tel_no_srchkey
+				, dpch_no
+	            , sndg_ctt
+	            , sms_st_cd
+	            , sms_sndg_rslt_key
+	            , apnd_File_nm1
+				, apnd_File_idx_nm1
+				, apnd_File_psn1
+				, apnd_File_nm2
+				, apnd_File_idx_nm2
+				, apnd_File_psn2
+				, apnd_File_nm3
+				, apnd_File_idx_nm3
+				, apnd_File_psn3
+	            , reg_dtm
+	            , regr_id
+	            , regr_org_cd
+	            , lst_corc_dtm
+	            , lst_corpr_id
+	            , lst_corpr_org_cd
+            ) VALUES (
+	            #{item.tenantId}
+	            , #{item.regDt}
+	            , #{item.schdNo}
+	            , (select coalesce(max(sndg_tgt_cust_seq),0)+1 from t_sms_sndg_tgt_info where tenant_id = #{item.tenantId} and reg_dt = #{item.regDt} and schd_no = #{item.schdNo} and sms_rslt_cd is null)
+	            , #{item.sndgRsvSqnc}
+	            , #{item.tmplMgntNo}
+	            , #{item.custRcgnPathCd}
+	            , #{item.custRcgnCd}
+	            , #{item.custId}
+	            , #{item.custNm}
+				, #{item.custNmSrchkey1}
+				, #{item.custNmSrchkey2}
+				, #{item.gndrCd}
+				, #{item.agelrgCd}
+				, #{item.recvrTelCntyCd}
+				, #{item.recvrTelNo}
+				, #{item.recvrTelNoSrchkey}
+				, #{item.dpchNo}
+	            , #{item.sndgCtt}
+	            , #{item.smsStCd}
+	            , #{item.smsSndgRsltKey}
+	            , #{item.apndFileNm1}
+				, #{item.apndFileIdxNm1}
+				, #{item.apndFilePsn1}
+				, #{item.apndFileNm2}
+				, #{item.apndFileIdxNm2}
+				, #{item.apndFilePsn2}
+				, #{item.apndFileNm3}
+				, #{item.apndFileIdxNm3}
+				, #{item.apndFilePsn3}
+	            , CURRENT_TIMESTAMP
+	            , #{item.regrId}
+	            , #{item.regrOrgCd}
+	            , CURRENT_TIMESTAMP
+	            , #{item.regrId}
+	            , #{item.regrOrgCd}
+            )
+        </foreach>
+    </insert>
+
+
+    <update id="SYSM434UPT01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE t_sms_sndg_schd
+	            SET
+		            sndg_dv =           #{item.sndgDv},
+		            tmpl_mgnt_no =      #{item.tmplMgntNo},
+		            tmpl_nm =           #{item.tmplNm},
+		            sndg_rsv_dt =       #{item.sndgRsvDt},
+		            sqnc_pat_dv_cd =    #{item.sqncPatDvCd},
+		            sndg_tgt_ncnt =     #{item.sndgTgtNcnt},
+		            sndg_cplt_ncnt =    #{item.sndgCpltNcnt},
+		            sndg_totz_ncnt =    #{item.sndgTotzNcnt},
+		            sndg_scss_ncnt =    #{item.sndgScssNcnt},
+		            sndg_fail_ncnt =    #{item.sndgFailNcnt},
+		            proc_st_cd =        #{item.procStCd},
+		            can_rsn_cd =        #{item.canRsnCd},
+		            can_rsn_ctt =       #{item.canRsnCtt},
+                    apnd_File_nm1 =		#{item.apndFileNm1},
+					apnd_File_idx_nm1 =	#{item.apndFileIdxNm1},	
+					apnd_File_psn1 =		#{item.apndFilePsn1},
+					apnd_File_nm2 =		#{item.apndFileNm2},
+					apnd_File_idx_nm2 =	#{item.apndFileIdxNm2},
+					apnd_File_psn2 =		#{item.apndFilePsn2},
+					apnd_File_nm3 =		#{item.apndFileNm3},
+					apnd_File_idx_nm3 =	#{item.apndFileIdxNm3},
+					apnd_File_psn3 =		#{item.apndFilePsn3},
+		            reg_dtm =           CURRENT_TIMESTAMP,
+		            regr_id =           #{item.regrId},
+		            regr_org_cd =       #{item.regrOrgCd},
+		            lst_corc_dtm =      CURRENT_TIMESTAMP,
+		            lst_corpr_id =      #{item.lstCorprId},
+		            lst_corpr_org_cd =  #{item.lstCorprOrgCd}
+            WHERE 1=1
+           	AND tenant_id = #{item.tenantId}
+            AND reg_dt = #{item.regDt}
+            AND schd_no = #{item.schdNo}
+        </foreach>
+    </update>
+    
+    <update id="SYSM434UPT0102" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+	        UPDATE t_sms_sndg_schd
+	        	set proc_st_cd 		= #{item.procStCd},
+	            lst_corc_dtm 		= CURRENT_TIMESTAMP,
+	            lst_corpr_id 		= #{item.lstCorprId},
+	            lst_corpr_org_cd 	= #{item.lstCorprOrgCd}
+			WHERE
+				tenant_id 	= #{item.tenantId}
+				and reg_dt 	= #{item.regDt}
+				and schd_no = #{item.schdNo}
+        </foreach>
+	</update>
+	
+	<update id="SYSM434UPT0103" parameterType="SYSM434VO">
+		UPDATE t_sms_sndg_schd 
+			SET proc_st_cd 		= #{procStCd}
+				,lst_corc_dtm 	= CURRENT_TIMESTAMP
+	            ,lst_corpr_id 	= #{lstCorprId}
+	            ,lst_corpr_org_cd = #{lstCorprOrgCd}
+		WHERE tenant_id = #{tenantId}
+			AND reg_dt 	= #{regDt}
+			AND schd_no = #{schdNo}
+	</update>
+	
+	<update id="SYSM434UPT02" parameterType="SYSM434VO">
+		UPDATE t_sms_sndg_tgt_info 
+			SET sndg_rsv_sqnc 	= #{sndgRsvSqnc}
+				,sms_st_cd 		= #{smsStCd}
+				,lst_corc_dtm 	= CURRENT_TIMESTAMP
+	            ,lst_corpr_id 	= #{lstCorprId}
+	            ,lst_corpr_org_cd = #{lstCorprOrgCd}
+		WHERE (tenant_id, reg_dt, schd_no, sndg_tgt_cust_seq) IN (
+			SELECT
+				tenant_id,
+				reg_dt,
+				schd_no ,
+				sndg_tgt_cust_seq 
+			FROM t_sms_sndg_tgt_info
+			WHERE tenant_id = #{tenantId}
+				AND reg_dt 	= #{regDt}
+				AND schd_no = #{schdNo}
+				AND sndg_rsv_sqnc = 0
+				AND abol_dtm is null
+				ORDER by sndg_tgt_cust_seq 
+				LIMIT #{denominator} 
+		)
+	</update>
+	
+	<update id="SYSM434UPT0201" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+		UPDATE t_sms_sndg_rsv_sqnc
+			SET    	lst_corc_dtm 		= CURRENT_TIMESTAMP
+					,lst_corpr_id 		= #{item.lstCorprId}
+					,lst_corpr_org_cd 	= #{item.lstCorprOrgCd}
+					,sqnc_proc_st_cd 	= #{item.sqncProcStCd}
+				<if test='item.sndgStrTm != null and item.sndgStrTm != ""'>
+					,sndg_str_tm = #{item.sndgStrTm}
+				</if>
+				<if test='item.sndgTgtNcnt != null and item.sndgTgtNcnt != ""'>
+			       	,sndg_tgt_ncnt = #{item.sndgTgtNcnt}
+				</if>
+				<if test='item.sndgScssNcnt != null and item.sndgScssNcnt != ""'>
+					,sndg_scss_ncnt = #{item.sndgScssNcnt}
+				</if>
+				<if test='item.sndgFailNcnt != null and item.sndgFailNcnt != ""'>
+					,sndg_fail_ncnt = #{item.sndgFailNcnt}
+				</if>
+		WHERE  tenant_id = #{item.tenantId}
+			AND reg_dt = #{item.regDt}
+			AND schd_no = #{item.schdNo}
+			AND sndg_rsv_sqnc = #{item.sndgRsvSqnc}
+		</foreach>
+	</update>
+	
+	<update id="SYSM434UPT0202" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+	        UPDATE t_sms_sndg_tgt_info
+	        	SET lst_corc_dtm 		= CURRENT_TIMESTAMP
+		            ,lst_corpr_id 		= #{item.lstCorprId}
+		            ,lst_corpr_org_cd 	= #{item.lstCorprOrgCd}
+		            ,sms_st_cd 			= #{item.smsStCd}
+            <if test='item.smsStCd != null and item.smsStCd != ""'>
+            	<if test='item.smsStCd == "1" or  item.smsStCd == "9"'>  <!-- 발송 차수 삭제/취소에 따른 등록상태 변경 -->
+            		,sndg_rsv_sqnc		= 0
+            	</if>
+            </if>
+			WHERE
+				tenant_id = #{item.tenantId}
+				and reg_dt = #{item.regDt}
+				and schd_no = #{item.schdNo}
+				and sndg_rsv_sqnc = #{item.sndgRsvSqnc}
+        </foreach>
+	</update>
+	
+	<update id="SYSM434UPT0203" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE t_sms_sndg_schd t1
+				SET lst_corc_dtm 	= CURRENT_TIMESTAMP
+				,lst_corpr_id 		= #{item.lstCorprId}
+				,lst_corpr_org_cd 	= #{item.lstCorprOrgCd}
+				,sndg_tgt_ncnt 		= t2.sndgTgtNcnt
+				,sndg_cplt_ncnt 	= t2.sndgCpltNcnt
+				,sndg_totz_ncnt 	= t2.sndgTotzNcnt
+				,sndg_scss_ncnt 	= t2.sndgScssNcnt
+				,sndg_fail_ncnt 	= t2.sndgFailNcnt
+			from (
+				SELECT 
+					tenant_id 
+					,reg_dt
+					,schd_no
+					,COALESCE(COUNT(*),0) AS totCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '1' THEN sms_st_cd END),0) 	AS regCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '2' THEN sms_st_cd END),0) 	AS assignCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '1' THEN sms_st_cd END),0) 	AS sndgTgtNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' THEN sms_st_cd END),0) 	AS sndgCpltNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '2' THEN sms_st_cd END),0) 	AS sndgTotzNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' and sms_rslt_cd = '1' THEN sms_st_cd END),0) 	AS sndgScssNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' and sms_rslt_cd = '2' THEN sms_st_cd END),0) 	AS sndgFailNcnt
+				FROM t_sms_sndg_tgt_info
+				WHERE tenant_id = #{item.tenantId}
+				AND reg_dt 		= #{item.regDt}
+				AND schd_no 	= #{item.schdNo}
+				AND abol_dtm is null
+				GROUP BY tenant_id, reg_dt, schd_no
+			)t2
+			WHERE t1.tenant_id 	= t2.tenant_id
+			AND t1.reg_dt 		= t2.reg_dt
+			AND t1.schd_no 		= t2.schd_no
+		</foreach>
+	</update>
+	
+	
+	<update id="SYSM434UPT0204" parameterType="SYSM434VO">
+			UPDATE t_sms_sndg_schd t1
+				SET lst_corc_dtm 	= CURRENT_TIMESTAMP
+				,lst_corpr_id 		= #{lstCorprId}
+				,lst_corpr_org_cd 	= #{lstCorprOrgCd}
+				,sndg_tgt_ncnt 		= t2.sndgTgtNcnt
+				,sndg_cplt_ncnt 	= t2.sndgCpltNcnt
+				,sndg_totz_ncnt 	= t2.sndgTotzNcnt
+				,sndg_scss_ncnt 	= t2.sndgScssNcnt
+				,sndg_fail_ncnt 	= t2.sndgFailNcnt
+			from (
+				SELECT 
+					tenant_id 
+					,reg_dt
+					,schd_no
+					,COALESCE(COUNT(*),0) AS totCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '1' THEN sms_st_cd END),0) 	AS regCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '2' THEN sms_st_cd END),0) 	AS assignCnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '1' THEN sms_st_cd END),0) 	AS sndgTgtNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' THEN sms_st_cd END),0) 	AS sndgCpltNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '2' THEN sms_st_cd END),0) 	AS sndgTotzNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' and sms_rslt_cd = '1' THEN sms_st_cd END),0) 	AS sndgScssNcnt
+					,COALESCE(COUNT(CASE WHEN sms_st_cd = '3' and sms_rslt_cd = '2' THEN sms_st_cd END),0) 	AS sndgFailNcnt
+				FROM t_sms_sndg_tgt_info
+				WHERE tenant_id = #{tenantId}
+				AND reg_dt 		= #{regDt}
+				AND schd_no 	= #{schdNo}
+				AND abol_dtm is null
+				GROUP BY tenant_id, reg_dt, schd_no
+			)t2
+			WHERE t1.tenant_id 	= t2.tenant_id
+			AND t1.reg_dt 		= t2.reg_dt
+			AND t1.schd_no 		= t2.schd_no
+	</update>
+	
+	<update id="SYSM434UPT0205" parameterType="SYSM434VO">
+			UPDATE t_sms_sndg_schd t1
+				SET lst_corc_dtm 	= CURRENT_TIMESTAMP
+				,lst_corpr_id 		= #{lstCorprId}
+				,lst_corpr_org_cd 	= #{lstCorprOrgCd}
+				,sndg_tgt_ncnt 		= #{sndgTgtNcnt}
+				,sndg_cplt_ncnt 	= #{sndgCpltNcnt}
+				,sndg_totz_ncnt 	= #{sndgTotzNcnt}
+				,sndg_scss_ncnt 	= #{sndgScssNcnt}
+				,sndg_fail_ncnt 	= #{sndgFailNcnt}
+			WHERE tenant_id = #{tenantId}
+			AND reg_dt 		= #{regDt}
+			AND schd_no 	= #{schdNo}
+	</update>	
+	
+	<update id="SYSM434UPT0206" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE t_sms_sndg_rsv_sqnc
+			SET    	lst_corc_dtm		= CURRENT_TIMESTAMP
+					,lst_corpr_id 		= #{item.lstCorprId}
+					,lst_corpr_org_cd 	= #{item.lstCorprOrgCd}
+					,abol_dtm 			= CURRENT_TIMESTAMP
+					,abolmn_id 			= #{item.abolmnId}
+					,abolmn_org_cd 		= #{item.abolmnOrgCd}
+			WHERE  tenant_id 			= #{item.tenantId}
+			       AND reg_dt 			= #{item.regDt}
+			       AND schd_no 			= #{item.schdNo}
+			       AND sndg_rsv_sqnc 	= #{item.sndgRsvSqnc}
+		</foreach>
+	</update>
+	
+	<update id="SYSM434UPT0207" parameterType="SYSM434VO">
+		 <![CDATA[
+				UPDATE t_sms_sndg_schd
+				SET lst_corc_dtm		= CURRENT_TIMESTAMP
+					,lst_corpr_id 		= #{lstCorprId}
+					,lst_corpr_org_cd 	= #{lstCorprOrgCd}
+					,proc_st_cd 		= #{procStCd}
+				WHERE  tenant_id 	= #{tenantId}
+				AND reg_dt 			= #{regDt}
+				AND schd_no 		= #{schdNo}
+				AND (
+					SELECT 
+						COUNT(tenant_id)
+					FROM t_sms_sndg_rsv_sqnc
+					WHERE  tenant_id 	= #{tenantId}
+					AND reg_dt 			= #{regDt}
+					AND schd_no 		= #{schdNo}
+					AND abol_dtm is null
+				) < 1
+			]]>
+	</update>
+	
+	<update id="SYSM434UPT0208" parameterType="SYSM434VO">
+	 <![CDATA[	
+			UPDATE t_sms_sndg_schd
+			SET lst_corc_dtm		= CURRENT_TIMESTAMP
+				,lst_corpr_id 		= #{lstCorprId}
+				,lst_corpr_org_cd 	= #{lstCorprOrgCd}
+				,proc_st_cd 		= #{procStCd}
+			WHERE  tenant_id 	= #{tenantId}
+			AND reg_dt 			= #{regDt}
+			AND schd_no 		= #{schdNo}
+			AND (
+				SELECT 
+					COUNT(tenant_id)
+				FROM t_sms_sndg_tgt_info
+				WHERE  tenant_id 	= #{tenantId}
+				AND reg_dt  		= #{regDt}
+				AND schd_no 		= #{schdNo} 
+				AND sms_st_cd 		!= '9'
+				AND abol_dtm is null
+			) < 1
+		]]>
+	</update>
+			
+	<update id="SYSM434UPT0209" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+				UPDATE t_sms_sndg_rsv_sqnc
+					SET lst_corc_dtm 	= CURRENT_TIMESTAMP
+					<if test='item.lstCorprId != null and item.lstCorprId != ""'>
+						,lst_corpr_id 		= #{item.lstCorprId}
+					</if>
+					<if test='item.lstCorprOrgCd != null and item.lstCorprOrgCd != ""'>
+						,lst_corpr_org_cd	= #{item.lstCorprOrgCd}
+					</if>
+					<if test='item.sndgStrTm != null'>
+						,sndg_str_tm		= #{item.sndgStrTm}
+					</if>
+					<if test='item.sndgCpltDtm != null and item.sndgCpltDtm != ""'>
+						,sndg_cplt_dtm		= CURRENT_TIMESTAMP
+					</if>
+					<if test='item.sndgTgtNcnt != null and item.sndgTgtNcnt != ""'>
+						,sndg_tgt_ncnt		= #{item.sndgTgtNcnt}
+					</if>
+					<if test='item.sndgScssNcnt != null and item.sndgScssNcnt != ""'>
+						,sndg_scss_ncnt		= #{item.sndgScssNcnt}
+					</if>
+					<if test='item.sndgFailNcnt != null and item.sndgFailNcnt != ""'>
+						,sndg_fail_ncnt		= #{item.sndgFailNcnt}
+					</if>
+					<if test='item.sqncProcStCd != null and item.sqncProcStCd != ""'>
+						,sqnc_proc_st_cd	= #{item.sqncProcStCd}
+					</if>
+					<if test='item.abolmnId != null and item.abolmnId != ""'>
+						,abol_dtm 			= CURRENT_TIMESTAMP}
+					</if>
+					<if test='item.abolmnId != null and item.abolmnId != ""'>
+						,abolmn_id			= #{item.abolmnId}
+					</if>
+					<if test='item.abolmnOrgCd != null and item.abolmnOrgCd != ""'>
+						,abolmn_org_cd		= #{item.abolmnOrgCd}
+					</if>
+				WHERE tenant_id = #{item.tenantId}
+				AND reg_dt = #{item.regDt}
+				AND schd_no = #{item.schdNo}
+				AND sndg_rsv_sqnc = #{item.sndgRsvSqnc}
+		</foreach>
+	</update>
+	
+	<update id="SYSM434UPT0301" parameterType="SYSM434VO">
+			UPDATE t_sms_sndg_tgt_info
+	        	set sms_st_cd = #{smsStCd},
+	            lst_corc_dtm = CURRENT_TIMESTAMP,
+	            lst_corpr_id = #{lstCorprId},
+	            lst_corpr_org_cd = #{lstCorprOrgCd}
+			WHERE
+				tenant_id = #{tenantId}
+				and reg_dt = #{regDt}
+				and schd_no = #{schdNo}
+				and COALESCE(sms_st_cd,'') = ''
+	</update>
+    
+    <update id="SYSM434UPT0302" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+	        UPDATE t_sms_sndg_tgt_info
+	        	set sms_st_cd = #{item.smsStCd},
+	            lst_corc_dtm = CURRENT_TIMESTAMP,
+	            lst_corpr_id = #{item.lstCorprId},
+	            lst_corpr_org_cd = #{item.lstCorprOrgCd}
+			WHERE
+				tenant_id = #{item.tenantId}
+				and reg_dt = #{item.regDt}
+				and schd_no = #{item.schdNo}
+				and sndg_tgt_cust_seq = #{item.sndgTgtCustSeq}
+        </foreach>
+	</update>
+	
+	
+    <update id="SYSM434DEL01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+        	UPDATE t_sms_sndg_schd
+        		set lst_corc_dtm = CURRENT_TIMESTAMP,
+        		abol_dtm = CURRENT_TIMESTAMP,
+        		abolmn_id =      #{item.abolmnId},
+	            abolmn_org_cd =  #{item.abolmnOrgCd}
+			WHERE
+				tenant_id = #{item.tenantId}
+				and reg_dt = #{item.regDt}
+				and schd_no = #{item.schdNo}
+        </foreach>
+	</update>
+	
+	<update id="SYSM434DEL03" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+        	UPDATE t_sms_sndg_tgt_info
+        		set lst_corc_dtm = CURRENT_TIMESTAMP,
+        		abol_dtm = CURRENT_TIMESTAMP,
+        		abolmn_id =      #{item.abolmnId},
+	            abolmn_org_cd =  #{item.abolmnOrgCd}
+			WHERE
+				tenant_id = #{item.tenantId}
+				and reg_dt = #{item.regDt}
+				and schd_no = #{item.schdNo}
+				and sndg_tgt_cust_seq = #{item.sndgTgtCustSeq}
+        </foreach>
+	</update>
+	
+	<insert id="SYSM434INS04" parameterType="SYSM434VO">
+		/* SYSM434_SQL.SYSM434INS04 */
+		WITH NOTINSERT AS (
+			SELECT 1 FROM T_SMS_SNDG_TGT_INFO WHERE TENANT_ID=#{tenantId} AND REG_DT = #{regDt} AND SCHD_NO = #{schdNo} AND RECVR_TEL_NO = #{recvrTelNo} AND ABOL_DTM IS NULL
+		)
+		INSERT INTO T_SMS_SNDG_TGT_INFO
+		(
+			  TENANT_ID
+			, REG_DT
+			, SCHD_NO
+			, SNDG_TGT_CUST_SEQ
+			, TMPL_MGNT_NO
+			, SNDG_RSV_SQNC
+			, CUST_RCGN_PATH_CD
+			, CUST_RCGN_CD
+			, CUST_ID
+			, CUST_NM
+			, CUST_NM_SRCHKEY1
+			, CUST_NM_SRCHKEY2
+			, RECVR_TEL_CNTY_CD
+			, RECVR_TEL_NO
+			, RECVR_TEL_NO_SRCHKEY
+			, DPCH_NO
+			, APND_FILE_NM1
+		    , APND_FILE_NM2
+		    , APND_FILE_NM3
+		    , APND_FILE_IDX_NM1
+		    , APND_FILE_IDX_NM2
+		    , APND_FILE_IDX_NM3
+		    , APND_FILE_PSN1
+		    , APND_FILE_PSN2
+		    , APND_FILE_PSN3
+			, REG_DTM
+			, REGR_ID
+			, REGR_ORG_CD
+			, LST_CORC_DTM
+			, LST_CORPR_ID
+			, LST_CORPR_ORG_CD
+			, GNDR_CD
+		) 
+		SELECT
+			  #{tenantId}
+			, #{regDt}
+			, #{schdNo}
+			, (SELECT COALESCE(MAX(SNDG_TGT_CUST_SEQ),0)+1 FROM T_SMS_SNDG_TGT_INFO WHERE TENANT_ID = #{tenantId} AND REG_DT = #{regDt} AND SCHD_NO = #{schdNo})
+			, #{tmplMgntNo}
+			, #{sndgRsvSqnc}
+			, #{custRcgnPathCd}
+			, #{custRcgnCd}
+			, #{custId}
+			, #{custNm}
+			, #{custNmSrchkey1}
+			, #{custNmSrchkey2}
+			, #{recvrTelCntyCd}
+			, #{recvrTelNo}
+			, #{recvrTelNoSrchkey}
+			, (
+				SELECT BS_VL1
+				  FROM T_BASC_VLU_INFO
+				 WHERE TENANT_ID = #{tenantId}
+				   AND BS_VL_MGNT_NO = '30'
+				   AND USE_YN = 'Y'
+			  )
+			, #{apndFileNm1}
+		    , #{apndFileNm2}
+		    , #{apndFileNm3}
+		    , #{apndFileIdxNm1}
+		    , #{apndFileIdxNm2}
+		    , #{apndFileIdxNm3}
+		    , #{apndFilePsn1}
+		    , #{apndFilePsn2}
+		    , #{apndFilePsn3}
+		    , CURRENT_TIMESTAMP
+			, #{regrId}
+			, #{regrOrgCd}
+			, CURRENT_TIMESTAMP
+			, #{regrId}
+			, #{regrOrgCd}
+			, #{gndrCd}
+		WHERE NOT EXISTS ( SELECT 1 FROM NOTINSERT);
+	</insert>
+
+
+	<insert id="SYSM434INS05"  parameterType="SYSM434VO">
+            INSERT INTO t_sms_sndg_tgt_info(
+	            tenant_id
+	            , reg_dt
+	            , schd_no
+	            , sndg_tgt_cust_seq
+	            , sndg_rsv_sqnc
+	            , tmpl_mgnt_no
+	            , cust_rcgn_path_cd
+	            , cust_rcgn_cd
+	            , cust_id
+	            , cust_nm
+				, cust_nm_srchkey1
+				, cust_nm_srchkey2
+				, gndr_cd
+				, agelrg_cd
+				, recvr_tel_cnty_cd
+				, recvr_tel_no
+				, recvr_tel_no_srchkey
+				, dpch_no
+	            , sndg_ctt
+	            , sms_st_cd
+	            , sms_sndg_rslt_key
+	            , apnd_File_nm1
+				, apnd_File_idx_nm1
+				, apnd_File_psn1
+				, apnd_File_nm2
+				, apnd_File_idx_nm2
+				, apnd_File_psn2
+				, apnd_File_nm3
+				, apnd_File_idx_nm3
+				, apnd_File_psn3
+	            , reg_dtm
+	            , regr_id
+	            , regr_org_cd
+	            , lst_corc_dtm
+	            , lst_corpr_id
+	            , lst_corpr_org_cd
+            )
+            SELECT
+	            #{tenantId}
+	            , #{regDt}
+	            , #{schdNo}
+	            , (select coalesce(max(sndg_tgt_cust_seq),0)+1 from t_sms_sndg_tgt_info where tenant_id = #{tenantId} and reg_dt = #{regDt} and schd_no = #{schdNo} and sms_rslt_cd is null)
+	            , #{sndgRsvSqnc}
+	            , #{tmplMgntNo}
+	            , #{custRcgnPathCd}
+	            , #{custRcgnCd}
+	            , #{custId}
+	            , #{custNm}
+				, #{custNmSrchkey1}
+				, #{custNmSrchkey2}
+				, #{gndrCd}
+				, #{agelrgCd}
+				, #{recvrTelCntyCd}
+				, #{recvrTelNo}
+				, #{recvrTelNoSrchkey}
+				, #{dpchNo}
+	            , #{sndgCtt}
+	            , #{smsStCd}
+	            , #{smsSndgRsltKey}
+	            , #{apndFileNm1}
+				, #{apndFileIdxNm1}
+				, #{apndFilePsn1}
+				, #{apndFileNm2}
+				, #{apndFileIdxNm2}
+				, #{apndFilePsn2}
+				, #{apndFileNm3}
+				, #{apndFileIdxNm3}
+				, #{apndFilePsn3}
+	            , CURRENT_TIMESTAMP
+	            , #{regrId}
+	            , #{regrOrgCd}
+	            , CURRENT_TIMESTAMP
+	            , #{regrId}
+	            , #{regrOrgCd}
+			WHERE NOT EXISTS ( SELECT 1 FROM T_SMS_SNDG_TGT_INFO where tenant_id = #{tenantId} and reg_dt = #{regDt} and schd_no = #{schdNo} AND recvr_tel_no = #{recvrTelNo} and abol_dtm is null)
+    </insert>
+</mapper>

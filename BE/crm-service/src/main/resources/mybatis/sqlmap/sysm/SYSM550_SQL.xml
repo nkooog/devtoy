@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM550Mapper">
+
+    <resultMap id="result" type="SYSM550VO">
+        <result property="oprNotiNo" column="opr_noti_no"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="notiDvCd" column="noti_dv_cd"/>
+        <result property="notiDvNm" column="noti_dv_nm"/>
+        <result property="notiTite" column="noti_tite"/>
+        <result property="notiCtt" column="noti_ctt"/>
+        <result property="notiStrDtm" column="noti_str_dtm"/>
+        <result property="notiEndDtm" column="noti_end_dtm"/>
+        <result property="apclDvCd" column="apcl_dv_cd"/>
+        <result property="regDtm" column="reg_dtm"/>
+        <result property="regrId" column="regr_id"/>
+        <result property="regrOrgCd" column="regr_org_cd"/>
+        <result property="lstCorcDtm" column="lst_corc_dtm"/>
+        <result property="lstCorprId" column="lst_corpr_id"/>
+        <result property="lstCorprOrgCd" column="lst_corpr_org_cd"/>
+        <result property="tenantNm" column="fmnm"/>
+        <result property="lstCorprNm" column="usr_nm"/>
+    </resultMap>
+
+    <select id="SYSM550SEL01" parameterType="SYSM550VO" resultMap="result">
+        SELECT
+            toni.opr_noti_no
+            ,COALESCE(tti.tenant_id, '') tenant_id
+            ,toni.noti_dv_cd
+            ,toni.noti_tite
+            ,toni.noti_ctt
+            ,toni.noti_str_dtm
+            ,toni.noti_end_dtm
+            ,toni.apcl_dv_cd
+            ,toni.reg_dtm
+            ,toni.regr_id
+            ,toni.regr_org_cd
+            ,toni.lst_corc_dtm
+            ,toni.lst_corpr_id
+            ,toni.lst_corpr_org_cd
+            ,COALESCE(tti.fmnm, '') fmnm
+            ,tuim.usr_nm
+        FROM t_dsbl_noti_mgnt toni
+        LEFT JOIN t_tenant_info tti ON toni.tenant_id = tti.tenant_id
+        LEFT JOIN t_usr_info_mgnt tuim ON toni.tenant_id  = tuim.tenant_id and toni.lst_corpr_id = tuim.usr_id
+        WHERE 1=1
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(tenantId)'>
+            AND toni.tenant_id in ( #{tenantId} , '')
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(notiDvCd)'>
+            AND toni.noti_dv_cd = #{notiDvCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(apclDvCd)'>
+            AND toni.apcl_dv_cd = #{apclDvCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(srchDtFrom)'>
+            AND <![CDATA[ toni.reg_dtm >= TO_TIMESTAMP(#{srchDtFrom}, 'YYYY-MM-DD') ]]>
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(srchDtTo)'>
+            AND <![CDATA[ toni.reg_dtm <= TO_TIMESTAMP(#{srchDtTo}, 'YYYY-MM-DD') + INTERVAL '24HOURS' ]]>
+        </if>
+        ORDER BY toni.noti_dv_cd ASC, toni.opr_noti_no DESC
+    </select>
+
+    <insert id="SYSM550INS01" parameterType="SYSM550VO">
+        INSERT INTO t_dsbl_noti_mgnt (
+            opr_noti_no,
+            tenant_id,
+            noti_dv_cd,
+            noti_tite,
+            noti_ctt,
+            noti_str_dtm,
+            noti_end_dtm,
+            apcl_dv_cd,
+            reg_dtm,
+            regr_id,
+            regr_org_cd,
+            lst_corc_dtm,
+            lst_corpr_id,
+            lst_corpr_org_cd
+        ) VALUES (
+            #{oprNotiNo},
+            COALESCE(#{tenantId},''),
+            #{notiDvCd},
+            #{notiTite},
+            #{notiCtt},
+            #{notiStrDtm},
+            #{notiEndDtm},
+            #{apclDvCd},
+            CURRENT_TIMESTAMP,
+            #{regrId},
+            #{regrOrgCd},
+            CURRENT_TIMESTAMP,
+            #{lstCorprId},
+            #{lstCorprOrgCd}
+        ) ON CONFLICT (opr_noti_no)
+        DO
+        UPDATE
+            SET
+            opr_noti_no =   EXTRACT(EPOCH FROM NOW()) * 1000 ,
+            tenant_id = COALESCE(#{tenantId},''),
+            noti_dv_cd = #{notiDvCd},
+            noti_tite = #{notiTite},
+            noti_ctt = #{notiCtt},
+            noti_str_dtm = #{notiStrDtm},
+            noti_end_dtm = #{notiEndDtm},
+            apcl_dv_cd = #{apclDvCd},
+            lst_corc_dtm = CURRENT_TIMESTAMP,
+            lst_corpr_id = #{lstCorprId},
+            lst_corpr_org_cd = #{lstCorprOrgCd}
+    </insert>
+
+    <delete id="SYSM550DEL01" parameterType="SYSM550VO">
+        DELETE
+        FROM t_dsbl_noti_mgnt
+        WHERE opr_noti_no = #{oprNotiNo}
+    </delete>
+
+
+
+
+    <select id="SYSM550SEL02" parameterType="SYSM550VO" resultMap="result">
+        SELECT
+            toni.opr_noti_no
+             ,COALESCE(toni.tenant_id, '전체') tenant_id
+             -- ,(select com_cd_nm from t_com_cd tcc where mgnt_item_cd = 'C0422' and com_cd = toni.noti_dv_cd)    AS noti_dv_cd
+
+             ,COALESCE(toni.noti_dv_cd, '') AS noti_dv_cd
+             ,CASE
+                 WHEN COALESCE(toni.noti_dv_cd, '') = '9' THEN 'EXONA CRM 전체'
+                 WHEN COALESCE(toni.noti_dv_cd, '') = '1' THEN '전화상담'
+                 WHEN COALESCE(toni.noti_dv_cd, '') = '2' THEN 'EXONA CRM'
+                 ELSE '기타'  -- 조건에 맞지 않는 모든 경우에 대한 기본값을 설정할 수 있습니다.
+             END AS noti_dv_nm
+             ,toni.noti_tite
+             ,toni.noti_ctt
+             ,toni.noti_str_dtm  AS noti_str_dtm
+             ,toni.noti_end_dtm  AS noti_end_dtm
+             ,toni.apcl_dv_cd
+             ,toni.reg_dtm
+             ,toni.regr_id
+             ,toni.regr_org_cd
+             ,toni.lst_corc_dtm
+             ,toni.lst_corpr_id
+             ,toni.lst_corpr_org_cd
+             ,COALESCE(tti.fmnm, '전체') fmnm
+             ,tuim.usr_nm
+        FROM t_dsbl_noti_mgnt toni
+                 LEFT JOIN t_tenant_info tti ON toni.tenant_id = tti.tenant_id
+                 LEFT JOIN t_usr_info_mgnt tuim ON toni.tenant_id  = tuim.tenant_id and toni.lst_corpr_id = tuim.usr_id
+        WHERE
+            NOW()  between toni.noti_str_dtm AND  toni.noti_end_dtm
+        AND toni.apcl_dv_cd = '2'
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(tenantId)'>
+            AND toni.tenant_id in ( #{tenantId} , '')
+        </if>
+        <if test='@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(tenantId)'>
+            AND toni.tenant_id = ''
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(notiDvCd)'>
+            AND toni.noti_dv_cd in ( #{notiDvCd} , '9')
+        </if>
+        ORDER BY CASE WHEN toni.tenant_id = '' THEN 0 ELSE 1 END
+        LIMIT 1
+    </select>
+</mapper>
+

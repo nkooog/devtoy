@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM437Mapper">
+
+    <resultMap id="result1" type="SYSM437VO">
+    
+    	<result property="tenantId" 			column="tenantId"/>
+    	<result property="tmplMgntNo" 			column="tmplMgntNo"/>
+    	<result property="tmplNm" 				column="tmplNm"/>
+    	<result property="sndgCtt" 				column="sndgCtt"/>
+    	
+    	<result property="custId" 				column="custId"/>
+    	<result property="custNm" 				column="custNm"/>
+    	<result property="gndrCd" 				column="gndrCd"/>
+    	<result property="agelrgCd"				column="agelrgCd"/>
+    	<result property="recvrTelNo" 			column="recvrTelNo"/>
+    	<result property="sndgRsvDt" 			column="sndgRsvDt"/>
+    	<result property="sndgRsvTm" 			column="sndgRsvTm"/>
+    	<result property="sndgCpltTm"			column="sndgCpltTm"/>
+    	<result property="smsSndgRsltMsg"		column="smsSndgRsltMsg"/>
+    	<result property="smsRsltCd" 			column="smsRsltCd"/>
+    	<result property="regDtm" 				column="regDtm"/>
+    	<result property="regUsrNm" 			column="regUsrNm"/>
+    	
+ 
+    </resultMap>
+
+    <select id="SYSM437SEL01" parameterType="SYSM437VO" resultMap="result1">
+          select
+			tmpl_nm as tmplNm
+			, tmpl_mgnt_no as tmplMgntNo
+		from 
+			t_sms_tmpl tst
+		<where>
+			tenant_id = #{tenantId}
+			and abol_dtm is null
+		</where>
+		
+		order by 
+			tmplNm asc
+    </select>
+    
+    <select id="SYSM437SEL02" parameterType="SYSM437VO" resultMap="result1">
+          select
+			tssti.tenant_id as tenantId 
+			, tssti.tmpl_mgnt_no as tmplMgntNo
+			, tst.tmpl_nm as tmplNm
+			, tssti.cust_id as custId 
+			, tssti.cust_nm as custNm 
+			, tssti.gndr_cd as gndrCd 
+			, tssti.agelrg_cd as agelrgCd
+			, tssti.recvr_tel_no as recvrTelNo 
+			, tssti.sndg_ctt as sndgCtt
+			, to_date(tssti.sndg_rsv_dt, 'YYYYMMDD') as sndgRsvDt 
+			, tssti.sndg_rsv_tm as sndgRsvTm 
+			, to_char(tssti.sndg_cplt_tm, 'YYYY-MM-DD HH24:MI:SS') as sndgCpltTm
+			, tssti.sms_rslt_cd as smsRsltCd
+			, tssti.sms_sndg_rslt_msg as smsSndgRsltMsg
+			, tuimReg.usr_nm as regUsrNm
+			, to_char(tssti.reg_dtm, 'YYYY-MM-DD HH24:MI:SS') as regDtm
+		from t_sms_sndg_tgt_info tssti
+			left join t_sms_tmpl tst on tst.tenant_id = tssti.tenant_id and tst.tmpl_mgnt_no = tssti.tmpl_mgnt_no
+			left join t_usr_info_mgnt tuimReg on tuimReg.tenant_id = tssti.tenant_id and tuimReg.usr_id = tssti.regr_id
+		<where>
+			tssti.tenant_id = #{tenantId}
+			and sms_st_cd = '3'
+			<!-- and TO_CHAR(tssti.reg_dtm, 'YYYYMMDD')::timestamp between #{startDate}::timestamp and #{endDate}::timestamp -->
+			and reg_dt between #{startDate} and #{endDate}
+			<if test='tmplNm != null and tmplNm != ""'>
+				and tssti.tmpl_mgnt_no = CAST(#{tmplNm} AS INTEGER)
+			</if>
+			<if test='sndgCtt != null and sndgCtt != ""'>
+				and tssti.sndg_ctt like '%' ||  #{sndgCtt} || '%'
+			</if>
+			<if test='smsRsltCd != null and smsRsltCd != ""'>
+				and tssti.sms_rslt_cd = #{smsRsltCd}
+			</if>
+		</where>
+		order by 
+			tssti.reg_dtm DESC
+    </select>    
+    
+</mapper>
+

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM260Mapper">
+
+    <resultMap id="result1" type="SYSM260VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="mlingCd" column="mling_cd"/>
+        <result property="menuId" column="menu_id"/>
+        <result property="menuNm" column="menu_nm"/>
+        <result property="menuTypCd" column="menu_typ_cd"/>
+        <result property="prsMenuLvl" column="prs_menu_lvl"/>
+        <result property="hgrkMenuId" column="hgrk_menu_id"/>
+        <result property="srtSeqNo" column="srt_seq_no"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="usrGrd" column="usr_grd"/>
+        <result property="regDtm" column="reg_dtm"/>
+        <result property="regrId" column="regr_id"/>
+        <result property="regrOrgCd" column="regr_org_cd"/>
+        <result property="lstCorcDtm" column="lst_corc_dtm"/>
+        <result property="lstCorprId" column="lst_corpr_id"/>
+        <result property="lstCorprOrgCd" column="lst_corpr_org_cd"/>
+    </resultMap>
+
+    <resultMap id="result2" type="SYSM260VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="butnSeq" column="butn_seq"/>
+        <result property="butnTypCd" column="butn_typ_cd"/>
+        <result property="butnId" column="butn_id"/>
+        <result property="butnNm" column="butn_nm"/>
+        <result property="linkSumnPgmId" column="link_sumn_pgm_id"/>
+        <result property="butnStCd" column="butn_st_cd"/>
+    </resultMap>
+
+    <select id="SYSM260SEL01" parameterType="SYSM260VO" resultMap="result1">
+        SELECT tmm.tenant_id
+             , tmm.mling_cd
+             , tmm.menu_id
+             , tmm.menu_nm
+             , tmm.menu_typ_cd
+             , tmm.prs_menu_lvl
+             , tmm.hgrk_menu_id
+             , tmm.srt_seq_no
+             , tmm.data_frm_id
+             , tgm.usr_grd
+        FROM t_grdby_menu_atht tgm
+                 LEFT JOIN t_menu_mgnt tmm ON tmm.tenant_id = tgm.tenant_id AND tmm.menu_id = tgm.menu_id
+        WHERE tmm.tenant_id = #{tenantId}
+          AND tmm.mling_cd = #{mlingCd}
+          AND tgm.usr_grd = #{usrGrd}
+        ORDER BY tmm.srt_seq_no ASC
+    </select>
+
+    <select id="SYSM260SEL02" parameterType="SYSM260VO" resultMap="result2">
+        SELECT tdfb.*
+        FROM t_grdby_butn_atht tgba
+                 LEFT JOIN t_data_frme_butn tdfb ON tgba.tenant_id = tdfb.tenant_id AND tgba.data_frm_id = tdfb.data_frm_id AND tgba.butn_seq = tdfb.butn_seq
+        WHERE tgba.tenant_id = #{tenantId}
+          AND tgba.usr_grd = #{usrGrd}
+          AND tgba.data_frm_id = #{dataFrmId}
+          AND tdfb.butn_st_cd = '1'
+    </select>
+
+    <insert id="SYSM260INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_grdby_menu_atht
+            ( tenant_id
+            , mling_cd
+            , menu_id
+            , usr_grd
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            , lst_corc_dtm
+            , lst_corpr_id
+            , lst_corpr_org_cd
+            )
+            VALUES
+            ( #{item.tenantId}
+            , #{item.mlingCd}
+            , #{item.menuId}
+            , #{item.usrGrd}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            , CURRENT_TIMESTAMP
+            , #{item.lstCorprId}
+            , #{item.lstCorprOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="SYSM260DEL01" parameterType="SYSM260VO">
+        DELETE
+        FROM t_grdby_menu_atht
+        WHERE tenant_id = #{tenantId}
+          AND usr_grd = #{usrGrd}
+          AND mling_cd = #{mlingCd}
+    </delete>
+
+    <delete id="SYSM260DEL02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM t_grdby_menu_atht
+            WHERE tenant_id = #{item.tenantId}
+            AND menu_id = #{item.menuId}
+            AND usr_grd = #{item.usrGrd}
+            AND mling_cd = #{item.mlingCd}
+        </foreach>
+    </delete>
+</mapper>
+

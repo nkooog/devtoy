@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM230Mapper">
+   	
+	<select id="SYSM230SEL01" parameterType="SYSM230VO" resultType="SYSM230VO">
+		SELECT
+			u.tenant_id 		AS tenantId
+		,	t.fmnm				as fmNm
+		,	u.org_cd			AS orgCd
+		,	(WITH RECURSIVE ORG(ORG_CD, HGRK_ORG_CD, ORG_NM, DEPTH, PATH, CYCLE) AS (
+				SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, 1, ARRAY[ROW(G.ORG_NM)], FALSE
+				FROM   T_ORG_CD G
+				WHERE  G.TENANT_ID= #{tenantId}
+				AND    G.HGRK_ORG_CD IS NULL
+				UNION ALL
+				SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, OG.DEPTH + 1, PATH || ROW(G.ORG_NM), ROW(G.ORG_NM) = ANY(PATH)
+				FROM   T_ORG_CD G, ORG OG
+				WHERE  G.TENANT_ID= #{tenantId}
+				AND    G.HGRK_ORG_CD = OG.ORG_CD
+				AND NOT CYCLE )
+				SELECT TRANSLATE(REPLACE(CAST(PATH AS VARCHAR),  ',', '→'), '"{(\)}"','')
+				FROM ORG
+				WHERE ORG_CD = u.ORG_CD
+				) AS orgPath
+		,	u.usr_id			AS usrId
+		,	u.usr_nm 			AS usrNm
+		,	s.sys_log_msg 		as sysLogMsg
+		,	s.sys_log_dd_si 	as sysLogDdSi
+		,	s.reg_dtm 			as regDtm
+		FROM  T_USR_INFO_MGNT u
+		left outer join t_sys_log s USING(tenant_id,usr_id),
+		(select fmnm from T_TENANT_INFO where(tenant_id = #{tenantId})) t
+		WHERE 1=1
+		AND   u.tenant_id 		=  #{tenantId}
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(fromDate)'>
+			<![CDATA[ AND s.sys_log_dd_si  >= TO_DATE(#{fromDate}, 'yyyy-MM-dd') ]]>
+		</if>
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(toDate)'>
+			<![CDATA[ AND s.sys_log_dd_si  <= TO_DATE(#{toDate}  , 'yyyy-MM-dd') ]]>
+		</if>
+		<if test='usrList !=null and usrList.size !=0'>
+			AND u.usr_id IN
+			<foreach collection="usrList" item="usrId" index="index" separator="," open="(" close=")">
+				#{usrId}
+			</foreach>
+		</if>
+		<if test='orgList !=null and orgList.size !=0'>
+			AND u.org_cd IN
+			<foreach collection="orgList" item="orgCd" index="index" separator="," open="(" close=")">
+				#{orgCd}
+			</foreach>
+		</if>
+		order by s.usr_id asc , s.reg_dtm  desc
+	</select>
+	
+</mapper>	

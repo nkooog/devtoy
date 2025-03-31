@@ -7,21 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Slf4j
 @Controller
-@RequestMapping("/crm")
 public class TestController {
 
-
-	@RequestMapping("/test")
-	public String SYSM100M() {
-		log.debug(" #################################################### ");
+	@RequestMapping("/")
+	public String Test() {
 		return "/th/test/TestPage";
-	}
-
-	@ExceptionHandler(Exception.class)
-	public String handleException(Exception e) {
-		System.out.println(" ####### exception ");
-		log.debug(" ####### exception ");
-		return "errorPage"; // 이곳에 오류 페이지 경로를 지정
 	}
 
 }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM251Mapper">
+
+    <resultMap id="result" type="SYSM251VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="dataFrmeClasCd" column="data_frme_clas_cd"/>
+        <result property="pkgClasCd" column="pkg_clas_cd"/>
+        <result property="dataFrmTypCd" column="data_frm_typ_cd"/>
+        <result property="dataFrmeCrdTypCd" column="data_frme_crd_typ_cd"/>
+        <result property="dataFrmKornNm" column="data_frm_korn_nm"/>
+        <result property="dataFrmEngNm" column="data_frm_eng_nm"/>
+        <result property="dataFrmeTmplCd" column="data_frme_tmpl_cd"/>
+        <result property="dataFrmeTmplClss" column="data_frme_tmpl_clss"/>
+        <result property="itemArngDvCd" column="item_arng_dv_cd"/>
+        <result property="psnTop" column="psn_top"/>
+        <result property="psnLt" column="psn_lt"/>
+        <result property="szWdth" column="sz_wdth"/>
+        <result property="szHght" column="sz_hght"/>
+        <result property="brthItemCnt" column="brth_item_cnt"/>
+        <result property="vrtnItemCnt" column="vrtn_item_cnt"/>
+        <result property="lyotApclDvCd" column="lyot_apcl_dv_cd"/>
+        <result property="scrnDispDrctCd" column="scrn_disp_drct_cd"/>
+        <result property="regDtm" column="reg_dtm"/>
+        <result property="regrId" column="regr_id"/>
+        <result property="regrOrgCd" column="regr_org_cd"/>
+        <result property="lstCorcDtm" column="lst_corc_dtm"/>
+        <result property="lstCorprId" column="lst_corpr_id"/>
+        <result property="lstCorprOrgCd" column="lst_corpr_org_cd"/>
+        <result property="abolDtm" column="abol_dtm"/>
+        <result property="abolmnOrgCd" column="abolmn_org_cd"/>
+        <result property="abolmnId" column="abolmn_id"/>
+        <result property="comCdNm" column="com_cd_nm"/>
+        <result property="mapgVlu1" column="mapg_vlu1"/>
+    </resultMap>
+
+    <select id="SYSM251SEL01" parameterType="SYSM251VO" resultMap="result">
+        SELECT tdf.*
+        , tcc.com_cd_nm
+        , tcc.mapg_vlu1
+        FROM t_data_frm tdf
+        LEFT JOIN t_com_cd tcc ON tdf.data_frme_clas_cd = tcc.com_cd AND tcc.mgnt_item_cd = 'C0018'
+        WHERE tenant_id = #{tenantId}
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmeClasCd)'>
+            AND data_frme_clas_cd = #{dataFrmeClasCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmeCrdTypCd)'>
+            AND data_frme_crd_typ_cd = #{dataFrmeCrdTypCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmId)'>
+            AND data_frm_id like '%'||#{dataFrmId}||'%'
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmKornNm)'>
+            AND data_frm_korn_nm like '%'||#{dataFrmKornNm}||'%'
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmTypCd)'>
+            AND data_frm_typ_cd IN (#{dataFrmTypCd})
+        </if>
+    </select>
+</mapper>
+

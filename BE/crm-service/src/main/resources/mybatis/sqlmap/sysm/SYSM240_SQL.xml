@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM240Mapper">
+
+	<!-- 메타항목관리 전체조회  -->
+	<select id="SYSM240SEL01" parameterType="SYSM240VO" resultType="SYSM240VO">
+				SELECT
+					t1.MGNT_ITEM_CD				AS mgntItemCd,
+					t1.MGNT_ITEM_TYP_CD 		AS mgntItemTypCd,
+					t1.MGNT_ITEM_CD_NM   		AS mgntItemCdNm,
+					t1.MGNT_ITEM_CD_ENGNM  		AS mgntItemCdEngnm,
+					t1.SVC_OPR_CD				AS svcOprCd,
+					t1.DMN_CD					AS dmnCd,
+					t1.DATA_SZ_INT_MNRI_CNT 	AS dataSzIntMnriCnt,
+					t1.DATA_SZ_SMLCNT_MNRI_CNT 	AS dataSzSmlcntMnriCnt,
+					t1.LINK_URL					AS linkTblId,
+					t1.REG_DTM					AS regDtm,
+					t1.REGR_ID					AS regrId,
+					coalesce(t2.usr_nm,'')	 AS usrNm, --등록자
+					t1.REGR_ORG_CD				AS regrOrgCd,
+					t1.LST_CORC_DTM				AS lstCorcDtm,
+					t1.LST_CORPR_ID				AS lstCorprId,
+					coalesce(t3.usr_nm,'')	    AS userNm, --수정자
+					t1.LST_CORPR_ORG_CD			AS lstCorprOrgCd,
+					t1.cryp_tgt_yn				AS crypTgtYn,
+					t1.use_dv_cd				AS useDvCd
+				FROM T_MGNT_ITEM_CD t1
+				LEFT JOIN t_usr_info_mgnt AS t2
+					    ON t1.REGR_ID = t2.usr_id
+				LEFT JOIN t_usr_info_mgnt AS t3
+					    ON t1.LST_CORPR_ID = t3.usr_id
+				WHERE 1=1
+				AND t2.tenant_id = t3.tenant_id 
+				AND t2.tenant_id = 'BRD'
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCdNm)'>
+				AND t1.MGNT_ITEM_CD_NM  LIKE '%' ||  #{mgntItemCdNm} || '%'
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemTypCd)'>
+				AND t1.MGNT_ITEM_TYP_CD  =  #{mgntItemTypCd}
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dmnCd)'>
+				AND t1.DMN_CD =  #{dmnCd}
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCd)'>
+					AND t1.MGNT_ITEM_CD = #{mgntItemCd}
+				</if>
+				order by t1.mgnt_item_cd
+	</select>
+	<!-- 중복데이터가 조회됨
+				SELECT
+					t1.MGNT_ITEM_CD				AS mgntItemCd,
+					t1.MGNT_ITEM_TYP_CD 			AS mgntItemTypCd,
+					t1.MGNT_ITEM_CD_NM   			AS mgntItemCdNm,
+					t1.MGNT_ITEM_CD_ENGNM  		AS mgntItemCdEngnm,
+					t1.DMN_CD						AS dmnCd,
+					t1.DATA_SZ_INT_MNRI_CNT 		AS dataSzIntMnriCnt,
+					t1.DATA_SZ_SMLCNT_MNRI_CNT 	AS dataSzSmlcntMnriCnt,
+					t1.LINK_URL					AS linkTblId,
+					t1.REG_DTM						AS regDtm,
+					t1.REGR_ID						AS regrId,
+					coalesce(t2.usr_nm,'')	 AS usrNm,
+					t1.REGR_ORG_CD					AS regrOrgCd,
+					t1.LST_CORC_DTM				AS lstCorcDtm,
+					t1.LST_CORPR_ID				AS lstCorprId,
+					coalesce(t2.usr_nm,'')	 AS userNm,
+					t1.LST_CORPR_ORG_CD			AS lstCorprOrgCd,
+					t1.cryp_tgt_yn				AS crypTgtYn,
+					CASE WHEN  t1.ABOL_DTM is not null
+					AND t1.ABOLMN_ID is not null then 'D' ELSE 'Y' END sttCd
+				FROM T_MGNT_ITEM_CD t1
+				LEFT JOIN t_usr_info_mgnt AS t2
+					ON t1.REGR_ID = t2.usr_id
+					AND t1.LST_CORPR_ID = t2.usr_id
+				WHERE 1=1
+				-->
+	<!-- 2022.12.06 수정 -->
+
+
+	<!-- 메타관리항목 한글명 중복체크 -->
+	<select id="SYSM240SEL02" parameterType="SYSM240VO" resultType="Integer">
+			 SELECT
+				 COUNT(*) AS CNT
+  			 FROM T_MGNT_ITEM_CD
+  			 WHERE MGNT_ITEM_CD_NM = #{mgntItemCdNm}
+	</select>
+
+	<!-- 메타관리항목 영문명/코드 중복체크 -->
+	<select id="SYSM240SEL03" parameterType="SYSM240VO" resultType="Integer">
+			 SELECT
+				 COUNT(*) AS CNT
+  			 FROM T_MGNT_ITEM_CD
+  			 WHERE 1=1
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCdEngnm)'>
+					AND MGNT_ITEM_CD_ENGNM = #{mgntItemCdEngnm}
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCd)'>
+					AND MGNT_ITEM_CD = #{mgntItemCd}
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(svcOprCd)'>
+					AND SVC_OPR_CD = #{svcOprCd}
+				</if>
+	</select>	
+	
+	<!-- 메타관리항목 상세 수정 -->
+	<update id="SYSM240UPT01"  parameterType="SYSM240VO">
+			UPDATE T_MGNT_ITEM_CD
+			SET
+				MGNT_ITEM_CD		 	= #{mgntItemCd},
+				MGNT_ITEM_TYP_CD	 	= #{mgntItemTypCd},
+				MGNT_ITEM_CD_NM			= #{mgntItemCdNm},
+				MGNT_ITEM_CD_ENGNM		= #{mgntItemCdEngnm},
+				DATA_SZ_INT_MNRI_CNT	= #{dataSzIntMnriCnt},
+				DATA_SZ_SMLCNT_MNRI_CNT	= #{dataSzSmlcntMnriCnt},
+				DMN_CD					= #{dmnCd},
+				LINK_URL				= #{linkTblId},
+				CRYP_TGT_YN				= #{crypTgtYn},
+				USE_DV_CD				= #{useDvCd},
+				LST_CORC_DTM        	= CURRENT_TIMESTAMP,
+				LST_CORPR_ID        	= #{lstCorprId},
+				LST_CORPR_ORG_CD    	= #{lstCorprOrgCd},
+				SVC_OPR_CD				= #{svcOprCd},
+				<choose>
+					<when test='useDvCd.equals("D")'>
+						ABOL_DTM        	= CURRENT_TIMESTAMP,
+						ABOLMN_ID        	= #{lstCorprId},
+						ABOLMN_ORG_CD    	= #{lstCorprOrgCd}
+					</when>
+					<otherwise>
+						ABOL_DTM        	= null,
+						ABOLMN_ID        	= null,
+						ABOLMN_ORG_CD    	= null
+					</otherwise>
+				</choose>
+  		    WHERE 1=1 
+  		    AND MGNT_ITEM_CD        	= #{originMgntItemCd}
+  		    AND MLING_CD				= #{mlingCd}
+	</update>
+
+	<!-- 메타관리항목 신규등록  -->
+	<insert id="SYSM240INS01"  parameterType="SYSM240VO">
+			INSERT INTO T_MGNT_ITEM_CD
+				( 
+					MGNT_ITEM_CD,
+					MLING_CD,
+					MGNT_ITEM_TYP_CD, 			
+					MGNT_ITEM_CD_NM,  			
+					MGNT_ITEM_CD_ENGNM, 
+					SVC_OPR_CD,
+					DATA_SZ_INT_MNRI_CNT, 		
+					DATA_SZ_SMLCNT_MNRI_CNT,  		
+					DMN_CD,	
+					LINK_URL,
+					CRYP_TGT_YN,	
+					USE_DV_CD,	
+					REG_DTM,						
+					REGR_ID,						
+					REGR_ORG_CD,					
+					LST_CORC_DTM,				
+					LST_CORPR_ID,				
+					LST_CORPR_ORG_CD			
+			    )
+			VALUES
+				(
+				    #{mgntItemCd},
+				    #{mlingCd},
+				  	#{mgntItemTypCd},
+				  	#{mgntItemCdNm},
+				  	#{mgntItemCdEngnm},
+				  	#{svcOprCd},
+				  	#{dataSzIntMnriCnt},
+				  	#{dataSzSmlcntMnriCnt},
+				  	#{dmnCd},
+				  	#{linkTblId},
+				  	#{crypTgtYn},
+				  	#{useDvCd},
+				 	CURRENT_TIMESTAMP,
+				  	#{regrId}, 
+				  	#{regrOrgCd}, 
+				  	CURRENT_TIMESTAMP,
+				  	#{lstCorprId}, 
+				  	#{lstCorprOrgCd}   
+				) 
+	</insert>
+	
+	<!-- 메타관리 항목 논리삭제 -->
+	<update id="SYSM240UPT02"  parameterType="SYSM240VO">
+			UPDATE T_MGNT_ITEM_CD
+			SET
+				ABOL_DTM        	= CURRENT_TIMESTAMP,
+				ABOLMN_ID        	= #{abolmnId},
+				ABOLMN_ORG_CD    	= #{abolmnOrgCd}
+  		    WHERE 1=1 
+  		    AND MGNT_ITEM_CD        = #{mgntItemCd}
+  		    AND MLING_CD			= #{mlingCd}
+	</update>
+	
+	<!-- Excel 업로드 Oracle merge문 같은거 
+		postgreSQL 버전 9.5 이상부터 쓰는 문법
+	-->
+ 	<insert id="SYSM240INS02"  parameterType="java.util.HashMap">
+	<foreach collection="list" item="item" index="index" separator=";">
+		INSERT INTO T_MGNT_ITEM_CD
+				( 
+					MGNT_ITEM_CD,
+					MLING_CD,
+					MGNT_ITEM_TYP_CD, 			
+					MGNT_ITEM_CD_NM,  			
+					MGNT_ITEM_CD_ENGNM,
+					SVC_OPR_CD,
+					DATA_SZ_INT_MNRI_CNT, 		
+					DATA_SZ_SMLCNT_MNRI_CNT,  		
+					DMN_CD,
+					MGNT_ITEM_DESC,	
+					LINK_URL,	
+					cryp_tgt_yn,				
+					REG_DTM,						
+					REGR_ID,						
+					REGR_ORG_CD,					
+					LST_CORC_DTM,				
+					LST_CORPR_ID,				
+					LST_CORPR_ORG_CD			
+			    )
+			VALUES
+				(
+				    #{item.mgntItemCd},
+				    #{item.mlingCd},
+				  	#{item.mgntItemTypCd},
+				  	#{item.mgntItemCdNm},
+				  	#{item.mgntItemCdEngnm},
+				  	#{item.svcOprCd},
+				  	#{item.dataSzIntMnriCnt},
+				  	#{item.dataSzSmlcntMnriCnt},
+-- 				  	#{item.dmnCd},
+-- 					#{item.mgntItemDesc},
+					null,
+				 	null,
+				  	#{item.linkTblId},
+				  	#{item.crypTgtYn},
+				 	CURRENT_TIMESTAMP,
+				  	#{item.regrId}, 
+				  	#{item.regrOrgCd}, 
+				  	CURRENT_TIMESTAMP,
+				  	#{item.lstCorprId}, 
+				  	#{item.lstCorprOrgCd}   
+				) 
+			ON CONFLICT(MGNT_ITEM_CD, MLING_CD)
+			DO UPDATE 
+			SET 
+				MGNT_ITEM_CD		 	= #{item.mgntItemCd},
+				MGNT_ITEM_TYP_CD	 	= #{item.mgntItemTypCd},
+				MGNT_ITEM_CD_NM			= #{item.mgntItemCdNm},
+				MGNT_ITEM_CD_ENGNM		= #{item.mgntItemCdEngnm},
+				SVC_OPR_CD				= #{item.svcOprCd},
+				DATA_SZ_INT_MNRI_CNT	= #{item.dataSzIntMnriCnt},
+				DATA_SZ_SMLCNT_MNRI_CNT	= #{item.dataSzSmlcntMnriCnt},
+-- 				DMN_CD					= #{item.dmnCd},
+-- 				MGNT_ITEM_DESC			= #{item.mgntItemDesc},
+				DMN_CD					= null,
+				MGNT_ITEM_DESC			= null,
+				LINK_URL				= #{item.linkTblId},
+				cryp_tgt_yn				= #{item.crypTgtYn},
+				LST_CORC_DTM        	= CURRENT_TIMESTAMP,
+				LST_CORPR_ID        	= #{item.lstCorprId},
+				LST_CORPR_ORG_CD    	= #{item.lstCorprOrgCd}
+	</foreach>
+	</insert>
+
+	<!-- 메타관리 항목 물리삭제 -->
+	<delete id="SYSM240DEL01"  parameterType="SYSM240VO">
+		DELETE FROM T_MGNT_ITEM_CD
+		WHERE 1=1
+		  AND MGNT_ITEM_CD        = #{mgntItemCd}
+		  AND MLING_CD			= #{mlingCd}
+	</delete>
+
+	<delete id="SYSM240DEL02"  parameterType="SYSM240VO">
+		DELETE FROM t_com_cd
+			WHERE MGNT_ITEM_CD = #{mgntItemCd}
+		  AND MLING_CD			= #{mlingCd}
+	</delete>
+
+	<!-- 메타관리항목 한글명 중복체크 -->
+	<select id="SYSM240SEL04" parameterType="SYSM240VO" resultType="Integer">
+		SELECT
+			COUNT(com_cd) AS CNT
+		FROM t_com_cd
+		WHERE MGNT_ITEM_CD = #{mgntItemCd}
+		  AND MLING_CD			= #{mlingCd}
+	</select>
+
+
+</mapper>
+

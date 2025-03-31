@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM120Mapper">
+
+	<select id="SYSM120SEL03" parameterType="SYSM120VO" resultType="SYSM120VO"> 
+				SELECT
+				  		tenant_id    				AS tenantId
+					 	,bs_vl_mgnt_no				AS bsVlMgntNo
+						,bs_vl_mgnt_no				AS id
+						,bs_vl_nm					AS bsVlNm
+						,basc_vlu_dv_cd				AS bascVluDvCd
+						,basc_vlu_unit_cd			AS bascVluUnitCd
+						,basc_vlu_use_cnt_cd		AS bascVluUseCntCd
+						,data_sz_int_mnri_cnt			AS dataSzMnriCnt
+						,data_sz_smlcnt_mnri_cnt	AS dataSzSmlcntMnriCnt
+						,bs_vl1						AS bsVl1
+						,bs_vl2						AS bsVl2
+						,bs_vl3						AS bsVl3
+						,use_yn						AS useYn
+			FROM t_basc_vlu_info
+			<where>
+				AND tenant_id    =  #{tenantId}
+				<if test='useYn != null and useYn !=""'>
+					AND use_yn = #{useYn}
+				</if>
+				<if test='bsVlMgntNo != null and bsVlMgntNo != ""'>
+					AND bs_vl_mgnt_no = #{bsVlMgntNo}
+				</if>
+			</where>
+			ORDER BY bs_vl_mgnt_no 
+	</select>	
+	
+	
+	<insert id="SYSM120INS03" parameterType="java.util.HashMap">		
+			INSERT INTO t_basc_vlu_info
+					(
+					  	tenant_id 
+				 		,bs_vl_mgnt_no
+						,bs_vl_nm
+						,basc_vlu_dv_cd
+						,basc_vlu_unit_cd
+						,basc_vlu_use_cnt_cd
+						,data_sz_int_mnri_cnt
+						,data_sz_smlcnt_mnri_cnt
+						,bs_vl1
+						,bs_vl2
+						,bs_vl3
+						,use_yn
+					 	,reg_dtm
+					  	,regr_id
+					  	,regr_org_cd
+					  	,lst_corc_dtm
+					  	,lst_corpr_id
+					  	,lst_corpr_org_cd
+					)
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+					(
+					  #{item.tenantId}
+					  , #{item.bsVlMgntNo} 
+					  , #{item.bsVlNm} 
+					  , #{item.bascVluDvCd}
+					  , #{item.bascVluUnitCd} 
+					  , #{item.bascVluUseCntCd} 
+					  , #{item.dataSzMnriCnt}
+					  , #{item.dataSzSmlcntMnriCnt} 
+					  , #{item.bsVl1} 
+					  , #{item.bsVl2}
+					  , #{item.bsVl3} 
+					  , #{item.useYn} 
+					  , CURRENT_TIMESTAMP
+					  , #{item.regrId} 
+					  , #{item.regrOrgCd} 
+					  , CURRENT_TIMESTAMP
+					  , #{item.lstCorprId} 
+					  , #{item.lstCorprOrgCd} 
+					)
+			</foreach>
+	</insert>
+	
+	<update id="SYSM120UPT03" parameterType="java.util.List">
+  	 <foreach collection="list" item="item" separator=";">
+			UPDATE t_basc_vlu_info
+			SET  
+				 bs_vl_nm     				=  #{item.bsVlNm}
+				, basc_vlu_dv_cd  			=  #{item.bascVluDvCd}
+				, basc_vlu_unit_cd 			=  #{item.bascVluUnitCd}
+				, basc_vlu_use_cnt_cd   	=  #{item.bascVluUseCntCd}
+				, data_sz_int_mnri_cnt     	=  #{item.dataSzMnriCnt}
+				, data_sz_smlcnt_mnri_cnt	=  #{item.dataSzSmlcntMnriCnt} 
+				, bs_vl1					=  #{item.bsVl1}
+				, bs_vl2   					=  #{item.bsVl2}
+				, bs_vl3					=  #{item.bsVl3}
+				, use_yn					=  #{item.useYn}
+				, lst_corc_dtm 				= CURRENT_TIMESTAMP
+				, lst_corpr_id   			=  #{item.lstCorprId}
+				, lst_corpr_org_cd  		=  #{item.lstCorprOrgCd}
+  		    WHERE tenant_id    		=  #{item.tenantId}
+  		    AND  bs_vl_mgnt_no    	=  #{item.bsVlMgntNo}
+     </foreach>	    
+	</update>
+	
+	<delete id="SYSM120DEL03" parameterType="java.util.List">
+	 <foreach collection="list" item="item" separator=";">
+		DELETE FROM t_basc_vlu_info
+		WHERE tenant_id   =  #{item.tenantId}
+		AND  bs_vl_mgnt_no    	=  #{item.bsVlMgntNo}
+	 </foreach>	    
+	</delete>
+	
+	<delete id="SYSM120DEL04" parameterType="SYSM100VO">
+	    DELETE FROM t_basc_vlu_info
+		WHERE tenant_id   =  #{tenantId}
+	</delete>
+	
+</mapper>
+

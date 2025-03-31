@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM340Mapper">
+
+    <resultMap id="result1" type="SYSM340VO">
+        <result property="mgntItemCd" column="mgnt_item_cd"/>
+        <result property="mlingCd" column="mling_cd"/>
+        <result property="mgntItemTypCd" column="mgnt_item_typ_cd"/>
+        <result property="mgntItemCdNm" column="mgnt_item_cd_nm"/>
+        <result property="mgntItemCdEngnm" column="mgnt_item_cd_engnm"/>
+        <result property="dataSzIntMnriCnt" column="data_sz_int_mnri_cnt"/>
+        <result property="dataSzSmlcntMnriCnt" column="data_sz_smlcnt_mnri_cnt"/>
+        <result property="dmnCd" column="dmn_cd"/>
+        <result property="mgntItemDesc" column="mgnt_item_desc"/>
+        <result property="linkTblId" column="link_tbl_id"/>
+        <result property="comCdCnt" column="comCdCnt"/>
+        <result property="sttCd" column="sttCd"/>
+    </resultMap>
+
+    <resultMap id="result2" type="SYSM340VO">
+        <result property="id" column="id"/>
+        <result property="mgntItemCd" column="mgnt_item_cd"/>
+        <result property="comCd" column="com_cd"/>
+        <result property="mlingCd" column="mling_cd"/>
+        <result property="comCdNm" column="com_cd_nm"/>
+        <result property="srtSeq" column="srt_seq"/>
+        <result property="hgrkComCd" column="hgrk_com_cd"/>
+        <result property="subCdYn" column="sub_cd_yn"/>
+        <result property="subMgntItemCd" column="sub_mgnt_item_cd"/>
+        <result property="mapgVluCnt" column="mapg_vlu_cnt"/>
+        <result property="mapgVluUnitCd" column="mapg_vlu_unit_cd"/>
+        <result property="mapgVlu1" column="mapg_vlu1"/>
+        <result property="mapgVlu2" column="mapg_vlu2"/>
+        <result property="mapgVlu3" column="mapg_vlu3"/>
+        <result property="mapgVlu4" column="mapg_vlu4"/>
+        <result property="useDvCd" column="use_dv_cd"/>
+    </resultMap>
+
+    <select id="SYSM340SEL01" parameterType="SYSM340VO" resultMap="result1">
+        SELECT *
+        , (select count(*) from t_com_cd where mling_cd = tmic.mling_cd and mgnt_item_cd = tmic.mgnt_item_cd) AS comCdCnt
+        ,CASE WHEN  tmic.ABOL_DTM is not null
+        AND tmic.ABOLMN_ID is not null then 'D' ELSE 'Y' END sttCd
+        FROM t_mgnt_item_cd tmic
+        WHERE tmic.mling_cd = #{mlingCd}
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCd)'>
+            AND tmic.mgnt_item_cd like #{mgntItemCd}||'%'
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(mgntItemCdNm)'>
+            AND tmic.mgnt_item_cd_nm like '%'||#{mgntItemCdNm}||'%'
+        </if>
+--         AND tmic.abol_dtm is null
+--         AND tmic.abolmn_id is null
+--         AND tmic.abolmn_org_cd is null
+        ORDER BY tmic.mgnt_item_cd
+    </select>
+
+    <select id="SYSM340SEL02" parameterType="SYSM340VO" resultMap="result2">
+        SELECT *
+        , com_cd AS id
+        FROM t_com_cd
+        WHERE mling_cd = #{mlingCd}
+        AND mgnt_item_cd = #{mgntItemCd}
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(comCd)'>
+            AND com_cd = #{comCd}
+        </if>
+        AND abol_dtm is null
+        ORDER BY srt_seq ASC
+    </select>
+
+    <insert id="SYSM340INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_com_cd (
+                mgnt_item_cd
+                , com_cd
+                , mling_cd
+                , com_cd_nm
+                , srt_seq
+                , hgrk_com_cd
+                , sub_cd_yn
+                , sub_mgnt_item_cd
+                , mapg_vlu_cnt
+                , mapg_vlu_unit_cd
+                , mapg_vlu1
+                , mapg_vlu2
+                , mapg_vlu3
+                , mapg_vlu4
+                , use_dv_cd
+                , reg_dtm
+                , regr_id
+                , regr_org_cd
+                , lst_corpr_id
+                , lst_corc_dtm
+                , lst_corpr_org_cd
+            ) VALUES (
+                #{item.mgntItemCd}
+                , #{item.comCd}
+                , #{item.mlingCd}
+                , #{item.comCdNm}
+                , #{item.srtSeq}
+                , #{item.hgrkComCd}
+                , #{item.subCdYn}
+                , #{item.subMgntItemCd}
+                , #{item.mapgVluCnt}
+                , #{item.mapgVluUnitCd}
+                , #{item.mapgVlu1}
+                , #{item.mapgVlu2}
+                , #{item.mapgVlu3}
+                , #{item.mapgVlu4}
+                , #{item.useDvCd}
+                , CURRENT_TIMESTAMP
+                , #{item.regrId}
+                , #{item.regrOrgCd}
+                , #{item.lstCorprId}
+                , CURRENT_TIMESTAMP
+                , #{item.lstCorprOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <update id="SYSM340UPT01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE t_com_cd
+            SET com_cd = #{item.comCd}
+            , com_cd_nm = #{item.comCdNm}
+            , srt_seq = #{item.srtSeq}
+            , hgrk_com_cd = #{item.hgrkComCd}
+            , sub_cd_yn = #{item.subCdYn}
+            , sub_mgnt_item_cd = #{item.subMgntItemCd}
+            , mapg_vlu_cnt = #{item.mapgVluCnt}
+            , mapg_vlu_unit_cd = #{item.mapgVluUnitCd}
+            , mapg_vlu1 = #{item.mapgVlu1}
+            , mapg_vlu2 = #{item.mapgVlu2}
+            , mapg_vlu3 = #{item.mapgVlu3}
+            , mapg_vlu4 = #{item.mapgVlu4}
+            , use_dv_cd = #{item.useDvCd}
+            , lst_corc_dtm = CURRENT_TIMESTAMP
+            , lst_corpr_id = #{item.lstCorprId}
+            , lst_corpr_org_cd = #{item.lstCorprOrgCd}
+            WHERE mling_cd = #{item.mlingCd}
+            AND mgnt_item_cd = #{item.mgntItemCd}
+            AND com_cd = #{item.id}
+        </foreach>
+    </update>
+
+    <delete id="SYSM340DEL01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM t_com_cd
+            WHERE mgnt_item_cd = #{item.mgntItemCd}
+            AND com_cd = #{item.comCd}
+            AND mling_cd = #{item.mlingCd}
+        </foreach>
+    </delete>
+
+    <update id="SYSM340UPT02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE t_com_cd
+            SET
+                ABOL_DTM        	= CURRENT_TIMESTAMP,
+                ABOLMN_ID        	= #{item.abolmnId},
+                ABOLMN_ORG_CD    	= #{item.abolmnOrgCd}
+            WHERE mling_cd = #{item.mlingCd}
+            AND mgnt_item_cd = #{item.mgntItemCd}
+            AND com_cd = #{item.id}
+        </foreach>
+    </update>
+
+</mapper>

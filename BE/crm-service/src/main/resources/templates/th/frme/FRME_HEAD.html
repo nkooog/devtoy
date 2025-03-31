@@ -1,14 +1,88 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-    <head th:fragment="fragment_header">
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=1680,initial-scale=1"/>
-        <meta name="format-detection" content="telephone=no">
+<head th:fragment="fragment_header">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=1680,initial-scale=1"/>
+    <meta name="format-detection" content="telephone=no">
 
-        <link rel="shortcut icon" th:href="@{/images/favicon/favicon.ico}"/>
-        <link rel="icon" type="image/png" th:href="@{/images/favicon/favicon.png}"/>
-        <link rel="apple-touch-icon" th:href="@{/images/favicon/favicon.png}"/>
-        <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/content.css(v=${v})}"/>
+    <link rel="shortcut icon" th:href="@{/images/favicon/favicon.ico}"/>
+    <link rel="icon" type="image/png" th:href="@{/images/favicon/favicon.png}"/>
+    <link rel="apple-touch-icon" th:href="@{/images/favicon/favicon.png}"/>
 
-    </head>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/libs/kendoGrid/styles/kendo.common-material.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/libs/kendoGrid/styles/kendo.material.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/jquery.bxslider.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/begin.part.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/component.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/common.css(v=${v})}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/content.css(v=${v})}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/aicrm/fullcalendar.css(v=${v})}"/>
+
+    <script type="text/javascript" th:src="@{/js/jquery/3.2.1/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/comm/crossEditor.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/aicrm/common.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/comm/utils.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/comm/bizComm.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/comm/CNSL_Utils.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/comm/EXCEL_Utils.js(v=${v})}"></script>
+
+
+    <script type="text/javascript" th:src="@{/libs/kendoGrid/js/kendo.all.min.js}"></script>
+    <script type="text/javascript" th:src="@{/libs/kendoGrid/js/cultures/kendo.culture.ko.min.js}"></script>
+    <script type="text/javascript" th:src="@{/libs/kendoGrid/js/messages/kendo.messages.ko-KR.js}"></script>
+    <script type="text/javascript" th:src="@{/libs/kendoGrid/js/jszip.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/aicrm/jquery.marquee.min.js}"></script>
+    <script type="text/javascript" th:src="@{/libs/crosseEditor/4.5.3.02/js/namo_scripteditor.js}"></script>
+
+    <script type="text/javascript" th:src="@{/libs/summerEditor/0.8.18/summernote-lite.min.js}"></script>
+    <script type="text/javascript" th:src="@{/libs/summerEditor/0.8.18/lang/summernote-ko-KR.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/libs/summerEditor/0.8.18/summernote-lite.min.css(v=${v})}"/>
+
+    <script th:replace="~{/th/frme/GLOBAL.html :: fragment_global}"></script>
+
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.connetion.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.request.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.response.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.control.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.model.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/xbox.util.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/view.control.js(v=${v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/cnsl/xbox/bootstrap.min.js(v=${v})}"></script>
+
+    <script th:inline="javascript">
+		//Utils.js
+		var HEAD_langMap = new HashMap();
+		HEAD_langMap.put("alert.title",         [[#{alert.title}]]);
+		HEAD_langMap.put("alert.message.OK",    [[#{alert.message.OK}]]);
+		HEAD_langMap.put("alert.message.cancle",[[#{alert.message.cancle}]]);
+		HEAD_langMap.put("combo.select",        [[#{combo.select}]]);
+		HEAD_langMap.put("combo.all",           [[#{combo.all}]]);
+
+		//호출 순서 문제로 위치 변경
+		var MAINFRAME_langMap = new HashMap();
+		MAINFRAME_langMap.put("errors.session.expired",             [[#{errors.session.expired}]]);
+		MAINFRAME_langMap.put("FRME100M.tab.confirm.close",         [[#{FRME100M.tab.confirm.close}]]);
+		MAINFRAME_langMap.put("FRME100M.tab.confirm.close.all",     [[#{FRME100M.tab.confirm.close.all}]]);
+		MAINFRAME_langMap.put("FRME100M.menu.alert.noDataframe",    [[#{FRME100M.menu.alert.noDataframe}]]);
+		MAINFRAME_langMap.put("FRME100M.menu.alert.noPermission",   [[#{FRME100M.menu.alert.noPermission}]]);
+		MAINFRAME_langMap.put("error.tenantId",                     [[#{error.tenantId}]]);
+
+		MAINFRAME_langMap.put("FRME100M.getBasicInfo.default",           [[#{FRME100M.getBasicInfo.default}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiInfo.default",               [[#{FRME100M.NotiInfo.default}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiInfo.start",                 [[#{FRME100M.NotiInfo.start}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiInfo.stop",                  [[#{FRME100M.NotiInfo.stop}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.title",            [[#{FRME100M.NotiPopUpInfo.title}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.message.before",   [[#{FRME100M.NotiPopUpInfo.message.before}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.message.after",    [[#{FRME100M.NotiPopUpInfo.message.after}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.call.reservation", [[#{FRME100M.NotiPopUpInfo.call.reservation}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.callback.title",   [[#{FRME100M.NotiPopUpInfo.callback.title}]]);
+		MAINFRAME_langMap.put("FRME100M.NotiPopUpInfo.callback.after",   [[#{FRME100M.NotiPopUpInfo.callback.after}]]);
+		MAINFRAME_langMap.put("FRME100M.DataFrameCheck.error.alert",     [[#{FRME100M.DataFrameCheck.error.alert}]]);
+		MAINFRAME_langMap.put("FRME_TOP.multiple.open.main",             [[#{FRME_TOP.multiple.open.main}]]);
+		MAINFRAME_langMap.put("FRME_TOP.close.main",                     [[#{FRME_TOP.close.main}]]);
+		MAINFRAME_langMap.put("FRME_TOP.multiple.open.main.confirm",     [[#{FRME_TOP.multiple.open.main.confirm}]]);
+    </script>
+
+</head>
 </html>

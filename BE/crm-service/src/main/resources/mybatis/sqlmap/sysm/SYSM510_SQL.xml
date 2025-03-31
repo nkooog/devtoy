@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM510Mapper">
+
+    <select id="SYSM510SEL01" parameterType="SYSM510VO" resultType="SYSM510VO">
+        SELECT tenant_id         AS tenantId,
+               seq               AS seq,
+               basc_info_cd      AS bascInfoCd,
+               basc_info_nm      AS bascInfoNm,
+               basc_info_tbl_id  AS bascInfoTblId,
+               frzg_stgup_rls_cd AS frzgStgupRlsCd,
+               otxt_tenant_id    AS otxtTenantId,
+               prgr_stg_cd       AS prgrStgCd,
+               data_cre_ncnt     AS dataCreNcnt,
+               tagt_info_cre_dtm AS tagtInfoCreDtm,
+               lst_corc_dtm      AS lstCorcDtm,
+               lst_corpr_id      AS lstCorprId,
+               lst_corpr_org_cd  AS lstCorprOrgCd
+        FROM T_TENANT_BASC_INFO_COMP_MSTR
+        WHERE tenant_id = #{tenantId}
+        ORDER BY seq
+    </select>
+    <insert id="SYSM510INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO T_TENANT_BASC_INFO_COMP_MSTR (
+	            tenant_id,
+	            seq,
+	            basc_info_cd,
+	            basc_info_nm,
+	            basc_info_tbl_id,
+	            frzg_stgup_rls_cd,
+	            otxt_tenant_id,
+	            prgr_stg_cd,
+	            data_cre_ncnt,
+	            tagt_info_cre_dtm,
+	            lst_corc_dtm,
+	            lst_corpr_id,
+	            lst_corpr_org_cd
+            ) VALUES (
+	            #{item.tenantId},
+	            #{item.seq},
+	            #{item.bascInfoCd},
+	            #{item.bascInfoNm},
+	            #{item.bascInfoTblId},
+	            #{item.frzgStgupRlsCd},
+	            #{item.otxtTenantId},
+	            #{item.prgrStgCd},
+	            #{item.dataCreNcnt},
+	            CURRENT_TIMESTAMP,
+	            CURRENT_TIMESTAMP,
+	            #{item.lstCorprId},
+	            #{item.lstCorprOrgCd}
+            ) ON CONFLICT (tenant_id, seq)
+            DO UPDATE SET
+	            tenant_id = #{item.tenantId},
+	            seq = #{item.seq},
+	            basc_info_cd = #{item.bascInfoCd},
+	            basc_info_nm = #{item.bascInfoNm},
+	            basc_info_tbl_id = #{item.bascInfoTblId},
+	            frzg_stgup_rls_cd = #{item.frzgStgupRlsCd},
+	            otxt_tenant_id = #{item.otxtTenantId},
+	            prgr_stg_cd = #{item.prgrStgCd},
+	            data_cre_ncnt = #{item.dataCreNcnt},
+	            tagt_info_cre_dtm = CURRENT_TIMESTAMP,
+	            lst_corc_dtm = CURRENT_TIMESTAMP,
+	            lst_corpr_id = #{item.lstCorprId},
+	            lst_corpr_org_cd = #{item.lstCorprOrgCd}
+        </foreach>
+    </insert>
+
+    <delete id="SYSM510DEL01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM T_TENANT_BASC_INFO_COMP_MSTR
+            WHERE tenant_id = #{item.tenantId}
+            AND seq = #{item.seq}
+        </foreach>
+    </delete>
+    <delete id="SYSM510DEL02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            <if test='!item.tenantId.equals("BRD")'>
+                DELETE FROM ${item.bascInfoTblId}
+                WHERE tenant_id = #{item.tenantId}
+            </if>
+        </foreach>
+    </delete>
+
+    <insert id="SYSM510CopyBasicData" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            <include refid="createTempTable"/>;
+            <include refid="dropColumnTempTable"/>;
+            <include refid="deleteTbascVluInfo"/>; <!-- t_basc_vlu_info 삭제 후 다시 추가 -->
+            <include refid="insertTempTable"/>;
+            <include refid="dropTempTable"/>;
+        </foreach>
+    </insert>
+    <sql id="createTempTable">
+        CREATE TEMPORARY TABLE ${item.tempTable} AS
+        SELECT *
+        FROM ${item.bascInfoTblId}
+        where tenant_id = #{item.otxtTenantId}
+    </sql>
+
+    <sql id="dropColumnTempTable">
+        ALTER TABLE ${item.tempTable} DROP COLUMN tenant_id;
+        <if test='item.bascInfoTblId.equals("T_USR_INFO_MGNT")'>
+            <include refid="deleteExceptForAdminUser"/>;
+        </if>
+        <if test='item.bascInfoTblId.equals("T_USR_MENU_ATHT")'>
+            <include refid="deleteExceptForAdminUser"/>;
+        </if>
+        <if test='item.bascInfoTblId.equals("T_TELE_SET_INF")'>
+            <include refid="deleteExceptForAdminUser"/>;
+        </if>
+    </sql>
+
+	<sql id="deleteTbascVluInfo">
+		<if test='item.bascInfoTblId.equals("T_BASC_VLU_INFO")'>
+			DELETE FROM T_BASC_VLU_INFO where tenant_id = #{item.tenantId}
+		</if>
+	</sql>
+    <sql id="deleteExceptForAdminUser">
+        DELETE FROM ${item.tempTable} WHERE NOT (usr_id ='000000' or usr_id = 'SYSADMIN');
+    </sql>
+
+    <sql id="insertTempTable">
+    	DELETE FROM ${item.bascInfoTblId} WHERE tenant_id = #{item.tenantId};
+        INSERT INTO ${item.bascInfoTblId} SELECT #{item.tenantId}, * FROM ${item.tempTable};
+    </sql>
+
+    <sql id="dropTempTable">
+        DROP TABLE ${item.tempTable}
+    </sql>
+    
+    <delete id="SYSM510deleteUnRegCust" parameterType="SYSM510VO">
+    	DELETE FROM T_CUST_INFO WHERE tenant_id = #{tenantId} AND cust_id = #{tenantId}||'_1';
+    </delete>
+
+    <insert id="SYSM510insertUnRegCust" parameterType="SYSM510VO">
+        INSERT INTO t_cust_info
+        (tenant_id
+        ,cust_no
+        ,cust_id_path_cd
+        ,cust_id
+        ,cust_nm
+        ,cust_nm_srchkey1
+        ,cust_nm_srchkey2
+        ,gndr
+        ,btdt
+        ,owhm_tel_no
+        ,wkpl_tel_no
+        ,mble_tel_no
+        ,reg_dtm
+        ,regr_id
+        ,regr_blng_org_cd
+        ,lst_corc_dtm
+        ,lst_corpr_id
+        ,lst_corpr_blng_org_cd
+        ,abol_dtm
+        ,abolmn_id
+        ,abolmn_blng_org_cd)
+        VALUES (
+               #{tenantId}
+               ,0
+               ,''
+               ,#{tenantId}||'_1'
+               ,'BAGszth3DhTHO2+rhRgAQw=='
+               ,'BOfl22ku3gQgtTk6CA0lIQ=='
+               ,'a8msgzJAsrC9b/tN1aUo1Q=='
+               ,''
+               ,'slvNOKl1kFczZiFS4JlMKg=='
+               ,'slvNOKl1kFczZiFS4JlMKg=='
+               ,'slvNOKl1kFczZiFS4JlMKg=='
+               ,'slvNOKl1kFczZiFS4JlMKg=='
+               ,NOW()
+               ,'000000'
+               ,'1'
+               ,NOW()
+               ,'000000'
+               ,'1'
+               ,NULL
+               ,NULL
+               ,NULL );
+    </insert>
+    <update id="SYSM510MUpdateUsrInfo">
+        UPDATE T_USR_INFO_MGNT
+        SET
+            SCRT_NO_LST_UPD_DTM  = NOW(),
+            POTO_IMG_FILE_NM     = NULL,
+            POTO_IMG_IDX_FILE_NM = NULL,
+            POTO_IMG_PSN         = NULL,
+            MBPH_NO              = NULL,
+            EML_ADDR_ISD         = NULL,
+            EML_ADDR_ISD_DMN     = NULL,
+            EML_ADDR_ISD_DMN_CD  = NULL,
+            EML_ADDR_EXTN        = NULL,
+            EML_ADDR_EXTN_DMN    = NULL,
+            EML_ADDR_EXTN_DMN_CD = NULL,
+            QUAL_ACQS_DD         = NOW(),
+            QUAL_LOSS_DD         = NOW() + INTERVAL '10 YEAR'
+        WHERE TENANT_ID = #{tenantId}
+    </update>
+
+    <select id="SYSM510CheckColumnLst" parameterType="SYSM510VO" resultType="int">
+        SELECT COUNT(*)
+        FROM INFORMATION_SCHEMA.COLUMNS A
+        WHERE A.TABLE_NAME = LOWER(#{bascInfoTblId})
+          AND A.COLUMN_NAME in ('lst_corc_dtm');
+    </select>
+    <select id="SYSM510CheckColumnReg" parameterType="SYSM510VO" resultType="int">
+        SELECT COUNT(*)
+        FROM INFORMATION_SCHEMA.COLUMNS A
+        WHERE A.TABLE_NAME = LOWER(#{bascInfoTblId})
+          AND A.COLUMN_NAME in ('reg_dtm');
+    </select>
+    <update id="SYSM510UpdateColumnLst" parameterType="SYSM510VO">
+        UPDATE ${bascInfoTblId}
+        SET LST_CORC_DTM     = NOW()
+        WHERE TENANT_ID = #{tenantId}
+    </update>
+    <update id="SYSM510UpdateColumnReg" parameterType="SYSM510VO">
+        UPDATE ${bascInfoTblId}
+        SET REG_DTM     = NOW()
+        WHERE TENANT_ID = #{tenantId}
+        AND (   SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS A
+                WHERE A.TABLE_NAME = LOWER(#{bascInfoTblId})
+                AND A.COLUMN_NAME IN ('reg_dtm') ) >= 1;
+    </update>
+    <update id="SYSM510UPT01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE T_TENANT_BASC_INFO_COMP_MSTR
+            SET
+	            OTXT_TENANT_ID = #{item.otxtTenantId}
+	            , DATA_CRE_NCNT = (SELECT COUNT(*) FROM ${item.bascInfoTblId} WHERE TENANT_ID = #{item.tenantId})
+	            , PRGR_STG_CD = #{item.prgrStgCd}
+	            , LST_CORC_DTM = CURRENT_TIMESTAMP
+	            , LST_CORPR_ID = #{item.lstCorprId}
+	            , LST_CORPR_ORG_CD = #{item.lstCorprOrgCd}
+            WHERE TENANT_ID = #{item.tenantId}
+            AND SEQ = #{item.seq}
+        </foreach>
+    </update>
+    
+    <update id="SYSM510UPT02" parameterType="SYSM510VO">
+    	UPDATE T_TENANT_BASC_INFO_COMP_MSTR 
+    		SET frzg_stgup_rls_cd = #{frzgStgupRlsCd}, 
+    			prgr_stg_cd = #{prgrStgCd} 
+    	WHERE tenant_id = #{tenantId}
+    </update>
+</mapper>
+

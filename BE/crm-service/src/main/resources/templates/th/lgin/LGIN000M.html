@@ -1,0 +1,127 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <div th:replace="~{/th/frme/FRME_HEAD.html :: fragment_header}"></div>
+    <style>
+        .loading {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            -webkit-animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="loginWrap">
+<section class="loginContainer">
+    <h1><span th:text="#{LGIN000M.title}" /></h1>
+
+    <form id="LGIN000M" name="LGIN000M" method="post" th:action="@{/login}">
+        <ul class="loginForm">
+            <li>
+                <span class="label"><i class="icoUtil_client"></i><span th:text="#{LGIN000M.form.tenant}" ></span></span>
+                <input type="text" class="input" th:placeholder="#{aicrm.common.message}" id="tenantId" name="tenantId" maxlength="3"  autoComplete="off" onkeyup="if(window.event.keyCode==13){uf_getMlingCd();}"/>
+                <input type="hidden" id="mlingCd" name="mlingCd" maxlength="2" readonly>
+            </li>
+            <li>
+                <span class="label"><i class="icoUtil_id"></i><span th:text="#{LGIN000M.form.usrId}" ></span></span>
+                <input type="text" class="input" th:placeholder="#{aicrm.common.message}" id="usrId" name="usrId" maxlength="7"  autoComplete="off" />
+            </li>
+            <li>
+                <span class="label"><i class="icoUtil_pw"></i><span th:text="#{LGIN000M.form.scrtNo}"></span></span>
+                <input type="password" class="input" th:placeholder="#{aicrm.common.message}" id="scrtNo" th:name="scrtNo" maxlength="20"  autoComplete="off" />
+                <!-- shpark 20241025 : 결함리포트 11 수정-->
+                <span id="eyeIcon" style=" cursor: pointer; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);" onclick="togglePassword()">
+					<img id="eyeImage" th:src="@{/images/contents/eye_off.png}" alt="Show Password" style="width: 25px"/>
+				</span>
+            </li>
+            <li class="block">
+                <button type="button" class="logBtn" onclick="fn_formSubmit();"><i class="icoUtil_login"></i><span th:text="#{LGIN000M.button.btnLogin}"></span></button>
+            </li>
+            <li class="block">
+                <p class="check">
+                    <input type="checkbox" id="IdSave" onclick='fn_chkIdSave(event);'><!-- id 명 rename요함! -->
+                    <label for="IdSave"><span th:text="#{LGIN000M.check.chkId}"></span></label><!-- id 값과 for 값을 동일하게 작업요함~! -->
+                    <input type="hidden" id="IdSaveYn" value="N" />
+                </p>
+                <p class="check">
+                    <input type="checkbox" id="NoExtNo" onclick='fn_chkNoExtNo(event);'><!-- id 명 rename요함! -->
+                    <label for="NoExtNo"><span th:text="#{LGIN000M.check.chkExtNo}" /></label><!-- id 값과 for 값을 동일하게 작업요함~! -->
+                    <input type="hidden" id="extNoUseYn" name="extNoUseYn"  value="N" />
+                </p>
+            </li>
+        </ul>
+    </form>
+</section><!-- //  class="loginContainer"  끝 -->
+<script th:inline="javascript">
+	var contextPath = /*[[@{/}]]*/ '';
+	var LGIN000_map = new HashMap();
+	LGIN000_map.put("LGIN000M.view",                        [[#{LGIN000M.view}]]);
+	LGIN000_map.put("common.logout.msg",                    [[#{common.logout.msg}]]);
+	LGIN000_map.put("common.required.msg",                  [[#{common.required.msg}]]);
+	LGIN000_map.put("fail.common.msg",                      [[#{fail.common.msg}]]);
+	LGIN000_map.put("LGIN000M.form.tenantId",               [[#{LGIN000M.form.tenantId}]]);
+	LGIN000_map.put("LGIN000M.form.usrId",                  [[#{LGIN000M.form.usrId}]]);
+	LGIN000_map.put("LGIN000M.form.scrtNo",                 [[#{LGIN000M.form.scrtNo}]]);
+	LGIN000_map.put("LGIN000M.form.mlingCd",                [[#{LGIN000M.form.mlingCd}]]);
+	LGIN000_map.put("LGIN000M.check.chkId",                 [[#{LGIN000M.check.chkId}]]);
+	LGIN000_map.put("LGIN000M.check.chkExtNo",              [[#{LGIN000M.check.chkExtNo}]]);
+	LGIN000_map.put("LGIN000M.error.tenantId",              [[#{LGIN000M.error.tenantId}]]);
+	LGIN000_map.put("LGIN000M.error.tenant.info",           [[#{LGIN000M.error.tenant.info}]]);
+	LGIN000_map.put("LGIN000M.error.alphabet",              [[#{LGIN000M.error.alphabet}]]);
+	LGIN000_map.put("LGIN000M.error.browserIE",             [[#{LGIN000M.error.browserIE}]]);
+	LGIN000_map.put("LGIN000M.info.winclose",               [[#{LGIN000M.info.winclose}]]);
+	LGIN000_map.put("LGIN000M.error.passw.length",          [[#{LGIN000M.error.passw.length}]]);
+	LGIN000_map.put("LGIN000M.error.requiredInformation",   [[#{LGIN000M.error.requiredInformation}]]);
+	LGIN000_map.put("LGIN000M.error.refreshRelogin",        [[#{LGIN000M.error.refreshRelogin}]]);
+	LGIN000_map.put("LGIN000M.error.timeoutCheckServer",    [[#{LGIN000M.error.timeoutCheckServer}]]);
+	LGIN000_map.put("LGIN000M.error.checkServer",           [[#{LGIN000M.error.checkServer}]]);
+	LGIN000_map.put("fail.common.idsearch",                 [[#{fail.common.idsearch}]]);
+	LGIN000_map.put("LGIN000M.error.loginBlock",            [[#{LGIN000M.error.loginBlock}]]);
+	LGIN000_map.put("LGIN000M.error.requiredIn",            [[#{LGIN000M.error.requiredIn}]]);
+
+
+	function loginResizeHeight() {
+		$('body.loginWrap').css('height', $(window).height());
+	};
+	//shpark 20241025 : 결함리포트 11 수정
+	function togglePassword() {
+		const passwordField = document.getElementById("scrtNo");
+		const eyeImage = document.getElementById("eyeImage");
+
+		// 비밀번호가 보일 때
+		if (passwordField.type === "password") {
+			passwordField.type = "text";
+			eyeImage.src = contextPath + "images/contents/eye_on.png"; // 눈동자 열림 아이콘
+			eyeImage.alt = "Hide Password";
+		} else {
+			// 비밀번호가 숨겨질 때
+			passwordField.type = "password";
+			eyeImage.src = contextPath + "images/contents/eye_off.png"; // 눈동자 닫힘 아이콘
+			eyeImage.alt = "Show Password";
+		}
+	}
+
+	$(document).ready(function () {
+		loginResizeHeight();
+
+		$(window).on('resize', function () {
+			loginResizeHeight();
+		});
+
+		// LGIN000M_fnLogin();
+	});
+</script>
+<script th:inline="javascript" th:src="@{/js/biz/lgin/LGIN000M.js(v=${v})}"></script>
+</body>
+</html>

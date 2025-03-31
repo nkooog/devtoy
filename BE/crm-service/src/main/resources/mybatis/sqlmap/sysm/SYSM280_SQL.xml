@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM280Mapper">
+	<sql id="SYSM280WHERE">
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(useDvCd)'>
+			AND use_dv_cd =  #{useDvCd}
+		</if>
+	</sql>
+	<select id="SYSM280SEL01" parameterType="SYSM280VO" resultType="SYSM280VO">
+
+		WITH RECURSIVE hierarchy AS (
+			SELECT
+				tenant_id 						AS tenantId
+				,cnsl_typ_cd					AS cnslTypCd
+				,cnsl_typ_cd					AS id
+				,mgnt_item_cd					AS mgntItemCd
+				,cnsl_typ_lvl_nm				AS cnslTypLvlNm
+				,prs_lvl_cd						AS prsLvlCd
+				,COALESCE(hgrk_cnsl_typ_cd, '')	AS hgrkCnslTypCd
+				,srt_seq						AS srtSeq
+				,data_cre_yn					AS dataCreYn
+				,use_dv_cd						AS useDvCd
+				,svc_opr_typ_cd					AS svcOprTypC
+				, 1                             AS level
+				, ARRAY[srt_seq]      AS path -- 첫 번째 부분에서 문자열로 변환하여 배열 초기화
+			FROM
+				t_cnsl_typ_cd t9
+			WHERE
+				(hgrk_cnsl_typ_cd  IS NULL OR hgrk_cnsl_typ_cd  = '')
+			AND
+				t9.tenant_id = #{tenantId}
+			<include refid="SYSM280WHERE"/>
+
+
+			UNION ALL
+
+			SELECT
+				t10.tenant_id						    AS tenantId
+				, t10.cnsl_typ_cd					    AS cnslTypCd
+				, t10.cnsl_typ_cd					    AS id
+				, t10.mgnt_item_cd					    AS mgntItemCd
+				, t10.cnsl_typ_lvl_nm				    AS cnslTypLvlNm
+				, t10.prs_lvl_cd					    AS prsLvlCd
+				, COALESCE(t10.hgrk_cnsl_typ_cd, '')	AS hgrkCnslTypCd
+				, COALESCE(t10.srt_seq ,99)						    AS srtSeq
+				, t10.data_cre_yn					    AS dataCreYn
+				, t10.use_dv_cd					    AS useDvCd
+				, t10.svc_opr_typ_cd					AS svcOprTypC
+				, t11.level + 1                     	AS level
+				, path || t10.srt_seq     	AS path -- 두 번째 부분에서 새로운 값 문자열로 변환하여 배열에 추가
+			FROM
+				(SELECT * FROM t_cnsl_typ_cd WHERE tenant_id = #{tenantId} <include refid="SYSM280WHERE"/> ) t10
+			JOIN
+				hierarchy t11 ON t10.hgrk_cnsl_typ_cd = t11.cnslTypCd
+		)
+
+		SELECT
+			ROW_NUMBER() OVER (ORDER BY path) AS rowNum
+			,tenantId
+			,cnslTypCd
+			,id
+			,mgntItemCd
+			,cnslTypLvlNm
+			,prsLvlCd
+			,hgrkCnslTypCd
+			,srtSeq
+			,dataCreYn
+			,useDvCd
+			,svcOprTypC
+			,CASE WHEN length(cnslTypCd) = 2 THEN cnslTypCd  ELSE  SUBSTRING(cnslTypCd::varchar,1,2) END lvl1Cd
+			,CASE WHEN length(cnslTypCd) = 2 THEN '' ELSE  SUBSTRING(cnslTypCd::varchar,3,2) END lvl2Cd
+			,CASE WHEN length(cnslTypCd) >= 6 THEN SUBSTRING(cnslTypCd::varchar,5,2) ELSE  '' END lvl3Cd
+			,CASE WHEN length(cnslTypCd) >= 8 THEN SUBSTRING(cnslTypCd::varchar,7,2) ELSE  '' END lvl4Cd
+			,CASE WHEN length(cnslTypCd) =10 THEN SUBSTRING(cnslTypCd::varchar,9,2) ELSE  '' END lvl5Cd
+			,level
+			,path
+			, array_length(path, 1)
+		FROM
+		hierarchy tctc
+		ORDER BY
+		path
+	</select>
+    
+    <select id="SYSM280SEL02" parameterType="SYSM280VO" resultType="SYSM280VO">
+       SELECT tenant_id					AS tenantId
+				, cnsl_typ_cd			AS cnslTypCd
+				, seq					AS seq
+				, keyword_nm			AS keywordNm
+				, keyword_epct_hit_rt	AS keywordEpctHitRt
+			FROM T_CNSL_TYP_ASSOC_KEYWORD
+			WHERE tenant_id = #{tenantId}
+			AND cnsl_typ_cd = #{cnslTypCd} 
+    </select>
+    
+   	<insert id="SYSM280INS01" parameterType="java.util.HashMap">		
+			INSERT INTO t_cnsl_typ_cd
+					(
+					  	tenant_id 
+				 		,cnsl_typ_cd
+						,mgnt_item_cd
+						,cnsl_typ_lvl_nm
+						,prs_lvl_cd
+						,hgrk_cnsl_typ_cd
+						,srt_seq
+						,data_cre_yn
+						,use_dv_cd
+						,reg_dtm
+					  	,regr_id
+					  	,regr_org_cd
+					  	,lst_corc_dtm
+					  	,lst_corpr_id
+					  	,lst_corpr_org_cd
+					)
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+					(
+					  #{item.tenantId}
+					  , #{item.cnslTypCd} 
+					  , #{item.mgntItemCd}
+					  , #{item.cnslTypLvlNm} 
+					  , #{item.prsLvlCd}
+					  , #{item.hgrkCnslTypCd} 
+					  , #{item.srtSeq} 
+					  , #{item.dataCreYn}
+					  , #{item.useDvCd} 
+					  , CURRENT_TIMESTAMP
+					  , #{item.regrId} 
+					  , #{item.regrOrgCd} 
+					  , CURRENT_TIMESTAMP
+					  , #{item.lstCorprId} 
+					  , #{item.lstCorprOrgCd} 
+					)
+			</foreach>
+	</insert>
+	
+	
+   	<insert id="SYSM280INS02" parameterType="java.util.HashMap">		
+			INSERT INTO T_CNSL_TYP_ASSOC_KEYWORD
+					(
+					  	tenant_id 
+				 		,cnsl_typ_cd
+						,keyword_nm
+						,keyword_epct_hit_rt
+						,seq
+						,reg_dtm
+					  	,regr_id
+					  	,regr_org_cd
+					)
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+					(
+					  #{item.tenantId}
+					  , #{item.cnslTypCd} 
+					  , #{item.keywordNm} 
+					  , #{item.keywordEpctHitRt} 
+					  , #{item.seq} 
+					  , CURRENT_TIMESTAMP
+					  , #{item.regrId} 
+					  , #{item.regrOrgCd} 
+					)
+			</foreach>
+	</insert>
+
+	<update id="SYSM280SAVE01" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			INSERT INTO t_cnsl_typ_cd
+			(
+				tenant_id
+				,cnsl_typ_cd
+				,mgnt_item_cd
+				,cnsl_typ_lvl_nm
+				,prs_lvl_cd
+				,hgrk_cnsl_typ_cd
+				,srt_seq
+				,data_cre_yn
+				,use_dv_cd
+				,reg_dtm
+				,regr_id
+				,regr_org_cd
+				,lst_corc_dtm
+				,lst_corpr_id
+				,lst_corpr_org_cd
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprTypGrpCd)'>
+					, svc_opr_typ_grp_cd
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprTypCd)'>
+					, svc_opr_typ_cd
+				</if>
+				<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprHgrkTypGrpCd)'>
+					, svc_opr_hgrk_typ_grp_cd
+				</if>
+			)
+			VALUES
+			(
+					#{item.tenantId}
+					, #{item.cnslTypCd}
+					, #{item.mgntItemCd}
+					, #{item.cnslTypLvlNm}
+					, #{item.prsLvlCd}
+					, #{item.hgrkCnslTypCd}
+					, #{item.srtSeq}
+					, #{item.dataCreYn}
+					, #{item.useDvCd}
+					, CURRENT_TIMESTAMP
+					, #{item.regrId}
+					, #{item.regrOrgCd}
+					, CURRENT_TIMESTAMP
+					, #{item.lstCorprId}
+					, #{item.lstCorprOrgCd}
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprTypGrpCd)'>
+						,  #{item.svcOprTypGrpCd}
+					</if>
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprTypCd)'>
+						,  #{item.svcOprTypCd}
+					</if>
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(item.svcOprHgrkTypGrpCd)'>
+						,  #{item.svcOprHgrkTypGrpCd}
+					</if>
+			)
+			ON CONFLICT (tenant_id , cnsl_typ_cd )
+			DO UPDATE
+			SET
+				cnsl_typ_lvl_nm     		=  #{item.cnslTypLvlNm}
+				, data_cre_yn  				=  #{item.dataCreYn}
+				, use_dv_cd 				=  #{item.useDvCd}
+				, lst_corc_dtm 				=  CURRENT_TIMESTAMP
+				, lst_corpr_id   			=  #{item.lstCorprId}
+				, lst_corpr_org_cd  		=  #{item.lstCorprOrgCd}
+				, srt_seq 					=  #{item.srtSeq}
+		</foreach>
+	</update>
+
+	<update id="SYSM280UPT01" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE t_cnsl_typ_cd
+			SET
+			cnsl_typ_lvl_nm     		=  #{item.cnslTypLvlNm}
+			, data_cre_yn  				=  #{item.dataCreYn}
+			, use_dv_cd 				=  #{item.useDvCd}
+			, lst_corc_dtm 				= CURRENT_TIMESTAMP
+			, lst_corpr_id   			=  #{item.lstCorprId}
+			, lst_corpr_org_cd  		=  #{item.lstCorprOrgCd}
+			WHERE tenant_id    		=  #{item.tenantId}
+			AND  cnsl_typ_cd    	=  #{item.cnslTypCd}
+		</foreach>
+	</update>
+
+
+
+	<delete id="SYSM280DEL01" parameterType="java.util.List">
+		/* SYSM280DEL01 */
+	 <foreach collection="list" item="item" separator=";">
+
+		UPDATE t_cnsl_typ_cd
+		SET   srt_seq	 	=  srt_seq - 1
+		WHERE tenant_id   	=  #{item.tenantId}
+		AND   hgrk_cnsl_typ_cd =  #{item.hgrkCnslTypCd}
+		AND   srt_seq 		>  #{item.srtSeq};
+
+
+		DELETE FROM t_cnsl_typ_cd
+		WHERE tenant_id   =  #{item.tenantId}
+		AND  cnsl_typ_cd    	=  #{item.cnslTypCd};
+	 </foreach>	    
+	</delete>
+	
+	<delete id="SYSM280DEL02" parameterType="SYSM280VO">
+		DELETE FROM T_CNSL_TYP_ASSOC_KEYWORD
+		WHERE tenant_id   =  #{tenantId}
+		AND  cnsl_typ_cd    	=  #{cnslTypCd}
+	</delete>
+
+
+	<select id="SYSM280SEL03" parameterType="SYSM280VO" resultType="SYSM280VO">
+		SELECT AA.*
+			,split_part(AA.cnslTypCdPath,'→',1) AS lvl1Cd
+			,split_part(AA.cnslTypCdPath,'→',2)	AS lvl2Cd
+			,split_part(AA.cnslTypCdPath,'→',3)	AS lvl3Cd
+			,split_part(AA.cnslTypCdPath,'→',4)	AS lvl4Cd
+			,split_part(AA.cnslTypCdPath,'→',5)	AS lvl5Cd
+		FROM (
+			WITH recursive cnslTyp(cnsl_typ_cd, prs_lvl_cd, hgrk_cnsl_typ_cd, cnsl_typ_lvl_nm, depth, path, cycle) as (
+				select
+					t9.cnsl_typ_cd
+					,t9.prs_lvl_cd
+					,t9.hgrk_cnsl_typ_cd
+					,t9.cnsl_typ_lvl_nm
+					,1
+					,array[ROW(t9.cnsl_typ_lvl_nm)]
+					,false
+				from t_cnsl_typ_cd t9
+				where t9.tenant_id = #{tenantId}
+				AND t9.use_dv_cd = 'Y'
+				union all
+				select
+					t10.cnsl_typ_cd
+					,t10.prs_lvl_cd
+					,t10.hgrk_cnsl_typ_cd
+					,t10.cnsl_typ_lvl_nm
+					,t11.depth + 1
+					,path || row(t10.cnsl_typ_lvl_nm)
+					,row(t10.cnsl_typ_lvl_nm) = ANY(path)
+				from t_cnsl_typ_cd t10, cnslTyp t11
+				where t10.tenant_id = #{tenantId}
+				AND t10.use_dv_cd = 'Y'
+				and t10.hgrk_cnsl_typ_cd = t11.cnsl_typ_cd
+			)
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY tctc.cnsl_typ_cd) AS rowNum
+				,tctc.tenant_id AS tenantId
+				,tctc.cnsl_typ_cd AS cnslTypCd
+				,tctc.cnsl_typ_cd AS id
+				,tctc.mgnt_item_cd AS mgntItemCd
+				,tctc.cnsl_typ_lvl_nm AS cnslTypLvlNm
+				,tctc.prs_lvl_cd AS prsLvlCd
+				,COALESCE(tctc.hgrk_cnsl_typ_cd, '') AS hgrkCnslTypCd
+				,tctc.srt_seq AS srtSeq
+				,tctc.data_cre_yn AS dataCreYn
+				,tctc.use_dv_cd AS useDvCd
+				,(
+					SELECT
+						Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Cast(path AS VARCHAR),
+						'{"(\"',''),'\")"',''),',', '→'),'(',''),')}',''),'}',''),'"\"',''),')',''), '{', '')
+					FROM cnslTyp
+					WHERE cnsl_typ_cd = tctc.cnsl_typ_cd
+					AND prs_lvl_cd = 'L'||depth
+				) as cnslTypCdPath
+				,mx.cnsl_typ_cd AS maxCnslTypCd
+			FROM t_cnsl_typ_cd tctc
+			LEFT OUTER JOIN (
+				SELECT
+					hgrk_cnsl_typ_cd
+					, tenant_id
+					, MAX(cnsl_typ_cd) AS cnsl_typ_cd
+				FROM t_cnsl_typ_cd tctc GROUP BY hgrk_cnsl_typ_cd, tenant_id
+			) mx
+			ON mx.tenant_id= tctc.tenant_id AND mx.cnsl_typ_cd= tctc.cnsl_typ_cd
+			WHERE tctc.tenant_id = #{tenantId}
+			AND tctc.use_dv_cd = 'Y'
+			AND tctc.data_cre_yn = 'Y'
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(prsLvlCd)'>
+			AND tctc.prs_lvl_cd = #{prsLvlCd}
+		</if>
+
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(srchText)'>
+			<choose>
+				<when test="srchCond == 1">
+					AND tctc.cnsl_typ_cd like #{srchText}||'%'
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(cnslTypCd)'>
+					AND tctc.cnsl_typ_cd like #{cnslTypCd}||'%'
+					</if>
+				</when>
+				<when test="srchCond == 2">
+					AND tctc.cnsl_typ_lvl_nm like #{srchText}||'%'
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(cnslTypCd)'>
+					AND tctc.cnsl_typ_cd like #{cnslTypCd}||'%'
+					</if>
+				</when>
+				<otherwise>
+					AND (tctc.cnsl_typ_cd like #{srchText}||'%'
+					OR
+					tctc.cnsl_typ_lvl_nm like #{srchText}||'%'
+					)
+					<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(cnslTypCd)'>
+					AND tctc.cnsl_typ_cd like #{cnslTypCd}||'%'
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+		ORDER BY tctc.cnsl_typ_cd
+	) AA
+	</select>
+
+	<select id="SYSM280SEL04" parameterType="SYSM280VO" resultType="SYSM280VO">
+		select
+			tctac.tenant_id 						AS tenantId
+			 ,tctac.cnsl_typ_cd						AS cnslTypCd
+			 ,tctac.base_answ_cd 					as baseAnswCd
+			 ,coalesce (tcc.com_cd_nm, '') 			as baseAnswCdNm
+		from t_cnsl_typ_answ_cd tctac
+				 left outer join t_com_cd tcc
+								 on tctac.base_answ_cd  = tcc.com_cd
+									 and tcc.mgnt_item_cd = 'C0235'
+		WHERE tctac.tenant_id = #{tenantId}
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmptyObj(cnslTypCdList)'>
+			AND tctac.cnsl_typ_cd IN
+			<foreach collection="cnslTypCdList" item="item" index="index" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+
+	<insert id="SYSM280INS03" parameterType="java.util.HashMap">
+		INSERT INTO t_cnsl_typ_answ_cd
+		(
+		tenant_id
+		,cnsl_typ_cd
+		,base_answ_cd
+		,reg_dtm
+		,regr_id
+		,regr_org_cd
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(
+			#{item.tenantId}
+			, #{item.cnslTypCd}
+			, #{item.baseAnswCd}
+			, CURRENT_TIMESTAMP
+			, #{item.regrId}
+			, #{item.regrOrgCd}
+			)
+		</foreach>
+	</insert>
+
+	<delete id="SYSM280DEL03" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			DELETE FROM t_cnsl_typ_answ_cd
+			WHERE tenant_id   =  #{item.tenantId}
+			AND  cnsl_typ_cd    	=  #{item.cnslTypCd}
+		</foreach>
+	</delete>
+
+	<select id="SYSM280SEL05" parameterType="SYSM280VO" resultType="SYSM280VO">
+		select tenant_id				AS tenantId
+			 , cnsl_typ_cd				AS cnslTypCd
+			 , mgnt_item_cd				AS mgntItemCd
+			 , cnsl_typ_lvl_cd			AS cnslTypLvlCd
+			 , cnsl_typ_lvl_nm			AS cnslTypLvlNm
+			 , prs_lvl_cd				AS prsLvlCd
+			 , hgrk_cnsl_typ_cd			AS hgrkCnslTypCd
+			 , srt_seq					AS srtSeq
+			 , data_cre_yn				AS dataCreYn
+			 , use_dv_cd				AS useDvCd
+			 , svc_opr_typ_grp_cd		AS svcOprTypGrpCd
+			 , svc_opr_typ_cd			AS svcOprTypCd
+			 , svc_opr_hgrk_typ_grp_cd  AS svcOprHgrkTypGrpCd
+		from t_cnsl_typ_cd
+		where tenant_id  = #{tenantId}
+		  and svc_opr_typ_cd  = #{svcOprTypGrpCd}
+	</select>
+
+	<update id="SYSM280SEQINIT" parameterType="SYSM280VO">
+		WITH RECURSIVE hierarchy AS (
+					-- 루트 노드를 선택합니다
+					SELECT
+						tenant_id,
+						svc_opr_typ_cd,
+						svc_opr_hgrk_typ_grp_cd,
+						cnsl_typ_cd,
+						1 AS level,  -- 레벨 1로 설정
+						LPAD(ROW_NUMBER() OVER (PARTITION BY tenant_id, svc_opr_hgrk_typ_grp_cd ORDER BY svc_opr_typ_cd::integer)::text, 2, '0') AS seq_num,  -- 각 레벨에서 순번을 2자리로 설정
+						LPAD(ROW_NUMBER() OVER (PARTITION BY tenant_id, svc_opr_hgrk_typ_grp_cd ORDER BY svc_opr_typ_cd::integer)::text, 2, '0') AS key_value  -- 초기 key_value 설정
+					FROM t_cnsl_typ_cd
+					WHERE (svc_opr_hgrk_typ_grp_cd IS NULL OR svc_opr_hgrk_typ_grp_cd  = 'NULL' OR svc_opr_hgrk_typ_grp_cd  = '' )
+					  AND tenant_id = #{tenantId}  -- 특정 tenant_id로 필터링
+
+					UNION ALL
+
+					-- 자식 노드를 재귀적으로 선택합니다
+					SELECT
+						child.tenant_id,
+						child.svc_opr_typ_cd,
+						child.svc_opr_hgrk_typ_grp_cd,
+						child.cnsl_typ_cd,
+						parent.level + 1 AS level,  -- 레벨을 1 증가시킴
+						LPAD(ROW_NUMBER() OVER (PARTITION BY child.tenant_id, child.svc_opr_hgrk_typ_grp_cd ORDER BY child.svc_opr_typ_cd::integer)::text, 2, '0') AS seq_num,  -- 자식 노드의 순번을 2자리로 설정
+						parent.key_value || LPAD(ROW_NUMBER() OVER (PARTITION BY child.tenant_id, child.svc_opr_hgrk_typ_grp_cd ORDER BY child.svc_opr_typ_cd::integer)::text, 2, '0') AS key_value  -- 부모의 key_value에 자식의 순번을 추가하여 key_value 생성
+					FROM t_cnsl_typ_cd child
+							 INNER JOIN hierarchy parent
+										ON parent.tenant_id = child.tenant_id
+											AND parent.svc_opr_typ_cd = child.svc_opr_hgrk_typ_grp_cd  -- 부모 자식 관계 설정
+				)
+		-- 결과를 업데이트합니다
+				UPDATE t_cnsl_typ_cd AS t
+				SET
+					srt_seq = h.seq_num::integer,  -- seq_num을 정수형으로 변환하여 srt_seq 설정
+					cnsl_typ_cd = h.key_value,  -- key_value를 cnsl_typ_cd로 설정
+					hgrk_cnsl_typ_cd = left(h.key_value, length(h.key_value) - 2) ,  -- hgrk_cnsl_typ_cd를 업데이트
+					prs_lvl_cd = 'L' || h.level,  -- 레벨을 prs_lvl_cd로 설정
+					data_cre_yn = CASE  -- 자식 노드 존재 여부를 체크하여 data_cre_yn 설정
+									  WHEN EXISTS (
+										  SELECT 1
+										  FROM t_cnsl_typ_cd child
+										  WHERE child.svc_opr_hgrk_typ_grp_cd = h.svc_opr_typ_cd
+											AND child.tenant_id = h.tenant_id
+									  ) THEN 'N'
+									  ELSE 'Y'
+						END
+						FROM hierarchy h
+		WHERE t.tenant_id = h.tenant_id
+		  AND t.svc_opr_typ_cd = h.svc_opr_typ_cd;  -- 일치하는 레코드를 업데이트
+	</update>
+
+	<update id="SYSM280SEQINIT_BAK" parameterType="SYSM280VO">
+		WITH ranked_hierarchy AS (
+			SELECT
+				tenant_id,
+				cnsl_typ_cd,
+				ROW_NUMBER() OVER (PARTITION BY tenant_id, hgrk_cnsl_typ_cd ORDER BY cnsl_typ_cd) AS rn
+			FROM
+				t_cnsl_typ_cd where tenant_id = #{tenantId}
+		)
+		UPDATE t_cnsl_typ_cd AS t
+		SET srt_seq = rh.rn
+			FROM ranked_hierarchy rh
+		WHERE t.tenant_id = rh.tenant_id
+		  AND t.cnsl_typ_cd = rh.cnsl_typ_cd
+	</update>
+
+</mapper>
