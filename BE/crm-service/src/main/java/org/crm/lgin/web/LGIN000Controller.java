@@ -110,45 +110,4 @@ public class LGIN000Controller {
 		return ResponseEntity.ok().body(result);
 	}
 
-
-	@PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity login(@RequestBody @Valid LGIN000DTO lgin000DTO, Errors errors) throws Exception {
-
-		JSONObject json = new JSONObject();
-		StringBuffer buffer = new StringBuffer();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		HttpStatus status = null;
-
-		if(errors.hasErrors()) {
-			return ResponseEntity.badRequest().body(errors);
-		}
-
-		Authentication authentication = this.authService.authenticate(lgin000DTO);
-		status = this.provider.isValidToken(authentication);
-
-		buffer.append(lgin000DTO.getTenantId());
-		buffer.append(this.SEPARATOR);
-		buffer.append(lgin000DTO.getUsrId());
-
-		switch (status) {
-			case OK -> {
-				String refresh = (String) this.redisTemplate.opsForValue().get(buffer.toString());
-				Claims claims = this.provider.parseClaims(refresh);
-				json.put("result", JwtToken.builder()
-						.refreshToken(refresh)
-						.refreshTokenExpiration(dateFormat.format(claims.getExpiration()))
-						.build());
-			}
-			case CREATED -> {
-				JwtToken jwtToken = this.provider.generateToken(authentication);
-				json.put("status" , HttpStatus.CREATED.value());
-				json.put("message", HttpStatus.CREATED);
-				json.put("result" , jwtToken);
-			}
-		}
-
-		return ResponseEntity.status(status).body(json);
-
-	}
-
 }
