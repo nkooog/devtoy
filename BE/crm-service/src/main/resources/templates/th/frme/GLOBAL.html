@@ -1,0 +1,141 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<script th:fragment="fragment_global" th:inline="javascript" >
+
+    var contextPath = /*[[@{/}]]*/ '';
+    if (contextPath.endsWith('/')) {
+        contextPath = contextPath.slice(0, -1);
+    }
+
+    //shpark 20241025 : 결함리포트 15 수정
+    if(window.opener == null || window.opener.closed ){
+        //url 직접 접근 막기.
+        //내부에서 kendo window open시에는 window.opener가 null이 아니므로 self == top을 이용하여 팝업창을 열었는지 확인 가능
+        if(self == top){
+            if(window.name != 'ispopup'){
+                window.location.href = "${pageContext.request.contextPath}/lgin/login";
+            }
+        }
+    }
+    var GLOBAL = {
+        debug: true,
+        contextPath: contextPath,
+        session: {
+            user: {
+                tenantId: [[${session?.user?.tenantId}]],
+                originTenantId: [[${session?.user?.originTenantId}]],
+                fmnm: [[${session?.user?.fmnm}]],
+                usrId: [[${session?.user?.usrId}]],
+                usrNm: [[${session?.user?.usrNm}]],
+                decUsrNm: [[${session?.user?.decUsrNm}]],
+                decEmlAddrIsd: [[${session?.user?.decEmlAddrIsd}]],
+                emlAddrIsdDmn: [[${session?.user?.emlAddrIsdDmn}]],
+                decEmlAddrExtn: [[${session?.user?.decEmlAddrExtn}]],
+                emlAddrExtnDmn: [[${session?.user?.emlAddrExtnDmn}]],
+                usrAlnm: [[${session?.user?.usrAlnm}]],
+                orgCd: [[${session?.user?.orgCd}]],
+                orgNm: [[${session?.user?.orgNm}]],
+                mlingCd: [[${session?.user?.mlingCd}]],
+                ctiUseYn: [[${session?.user?.ctiUseYn}]],
+                ctiAgenId: [[${session?.user?.ctiAgenId}]],
+                ctiAgenPw: [[${session?.user?.ctiAgenPw}]],
+                extNo: [[${session?.user?.extNo}]],
+                usrGrd: [[${session?.user?.usrGrd}]],
+                originUsrGrd: [[${session?.user?.originUsrGrd}]],
+                usrGrdNm: [[${session?.user?.usrGrdNm}]],
+                unfyBlbdCreAthtYn: [[${session?.user?.unfyBlbdCreAthtYn}]],
+                kldCtgrCreAtht: [[${session?.user?.kldCtgrCreAtht}]],
+                athtLvlOrgCd: [[${session?.user?.athtLvlOrgCd}]],
+                athtLvlDtCd: [[${session?.user?.athtLvlDtCd}]],
+                kldScwdSaveYn: [[${session?.user?.kldScwdSaveYn}]],
+                autoPfcnUseYn: [[${session?.user?.autoPfcnUseYn}]],
+                mapgVlu1: [[${session?.user?.mapgVlu1}]],
+                cntyCd: [[${session?.user?.cntyCd}]],
+                potoImgIdxFileNm: [[${session?.user?.potoImgIdxFileNm}]],
+                potoImgPsn: [[${session?.user?.potoImgPsn}]],
+                extNoUseYn: [[${session?.user?.extNoUseYn}]],
+                orgPath: [[${session?.user?.orgPath}]],
+                cmmtSetlmnYn: [[${session?.user?.cmmtSetlmnYn}]],
+                kldMgntSetlmnYn: [[${session?.user?.kldMgntSetlmnYn}]],
+                bascVluDvCd:  [[${session?.user?.bascVluDvCd}]],
+                menuAtht: [[${session?.user?.menuAtht}]],
+                cnslChnlDvCd : [[${session?.user?.cnslChnlDvCd}]],
+                dmnCd: [[${session?.user?.dmnCd}]],
+                sttUseYn: [[${session?.user?.sttUseYn}]],
+                personInfoMask: [[${session?.user?.personInfoMask}]]
+            },
+            usrEnvr: {
+                hlpdkUseYn: [[${session?.usrEnvr?.hlpdkUseYn}]],
+                msgrUseYn: [[${session?.usrEnvr?.msgrUseYn}]],
+                smsUseYn: [[${session?.usrEnvr?.smsUseYn}]],
+                kldSrchUseYn: [[${session?.usrEnvr?.kldSrchUseYn}]],
+                qLnkUseYn: [[${session?.usrEnvr?.qLnkUseYn}]],
+                favrlistUseYn: [[${session?.usrEnvr?.favrlistUseYn}]],
+                alrmUseYn: [[${session?.usrEnvr?.alrmUseYn}]],
+                alrmEffctUseYn: [[${session?.usrEnvr?.alrmEffctUseYn}]],
+                alrmPoupEffctUseYn: [[${session?.usrEnvr?.alrmPoupEffctUseYn}]],
+                miniDashUseYn: [[${session?.usrEnvr?.miniDashUseYn}]],
+                softPnUseYn: [[${session?.usrEnvr?.softPnUseYn}]],
+                mcqUseYn: [[${session?.usrEnvr?.mcqUseYn}]],
+                daulMoniUseYn: [[${session?.usrEnvr?.daulMoniUseYn}]],
+                sknCd: [[${session?.usrEnvr?.sknCd}]],
+                sknCdNm: [[${session?.usrEnvr?.sknCdNm}]],
+            },
+            bizsEnvr: {
+                bussddYn: [[${session?.bizsEnvr?.bussddYn}]],
+                bizstrTm: [[${session?.bizsEnvr?.bizstrTm}]],
+                bizEndTm: [[${session?.bizsEnvr?.bizEndTm}]]
+            }
+        },
+        bascVlu: {
+            list: Utils.isNull([[${bascVluList}]]) ? new Array() : JSON.parse([[${bascVluList}]])
+        },
+        fn: {
+            setSessionUser: function (_user) {
+                let keys = Object.keys(GLOBAL.session.user);
+
+                for (let i = 0; i < keys.length; i++) {
+                    if ($.trim(GLOBAL.session.user[keys[i]]) != $.trim(_user[keys[i]])) {
+                        GLOBAL.session.user[keys[i]] = $.trim(_user[keys[i]]);
+                    }
+                }
+
+                // iframe popup update
+                for (let i = 0; i < $('iframe').length; i++) {
+                    if (!$.isEmptyObject($('iframe')[i].contentWindow.GLOBAL))
+                        $('iframe')[i].contentWindow.GLOBAL.fn.setSessionUser(_user);
+                }
+
+                // window popup update
+                for (let i = 0; i < arrWin.length; i++) {
+                    if (!$.isEmptyObject(arrWin[i].GLOBAL))
+                        arrWin[i].GLOBAL.fn.setSessionUser(_user);
+                }
+            },
+            setSessionUsrEnvr: function (_usrEnvr) {
+                let keys = Object.keys(GLOBAL.session.usrEnvr);
+
+                for (let i = 0; i < keys.length; i++) {
+                    if ($.trim(GLOBAL.session.usrEnvr[keys[i]]) != $.trim(_usrEnvr[keys[i]])) {
+                        GLOBAL.session.usrEnvr[keys[i]] = $.trim(_usrEnvr[keys[i]]);
+                    }
+                }
+            },
+            setBascVlu: function (bascVluList) {
+                GLOBAL.bascVlu.list = bascVluList;
+            }
+        }
+    }
+
+    window.GLOBAL = GLOBAL;
+    Object.freeze(GLOBAL);
+
+    if (!GLOBAL.debug) {
+        if (!window.console) window.console = {};
+        let methods = ["log", "debug", "warn", "info"];
+
+        for (let i = 0; i < methods.length; i++) {
+            console[methods[i]] = function () {};
+        }
+    }
+</script>
+</html>

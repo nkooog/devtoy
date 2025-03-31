@@ -1,0 +1,13 @@
+spring:
+  thymeleaf:
+    prefix: classpath:/templates
+    suffix: .html
+    view-names: /th/*
+    check-template-location: true
+
+  web:
+    resources:
+      static-locations: file:${resources.dir}
+eureka:
+  client:
+    enabled: false
