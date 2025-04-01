@@ -1,14 +1,5 @@
 spring:
   application:
     name: crm-service
-
-server:
-  port: 45002
-
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.uuid}
+  profiles:
+   active: local

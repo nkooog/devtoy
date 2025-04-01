@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM101Mapper">
+	
+	<select id="SYSM101SEL01" parameterType="SYSM101VO" resultType="SYSM101VO"> <!-- 2022.01.04 sukim, resultType="egovMap" => map => VO -->
+			SELECT
+					tenant_id                	AS tenantId
+					,dmn_cd						AS dmnCd
+					,SP_TYP_CD					AS spTypCd
+					,tenant_st_cd			 	AS tenantStCd
+					,tenant_st_rsn_cd			AS tenantStRsnCd
+					,fmnm						AS fmnm
+					,fmnm_eng					AS fmnmEng
+					,repr_nm					AS reprNm
+					,repr_nm_eng				AS reprNmEng
+					,svc_typ_cd					AS svcTypCd
+					,usr_ac_cnt					AS usrAcCnt
+					,eml_snd_grps_addr			AS emlSndGrpsAddr
+					,mling_cd 					AS mlingCd
+					,org_lvl_cd					AS orgLvlCd
+					,svc_cont_dd				AS svcContDd
+					,svc_bltn_dd				AS svcBltnDd
+					,svc_expry_dd				AS svcExpryDd
+					,svc_trmn_dd				AS svcTrmnDd
+			FROM t_tenant_info
+			WHERE 1=1
+			 <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dmnCd)'>
+			 AND dmn_cd =  #{dmnCd}
+			 </if>
+			 <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(tenantStCd)'>
+			 AND tenant_st_cd =  #{tenantStCd}
+			 </if>
+			 <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(fmnm)'>
+			 AND fmnm like  #{fmnm}||'%'
+			 </if>
+			order by tenant_id
+	</select>	
+
+</mapper>
+

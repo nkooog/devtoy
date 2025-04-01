@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM310Mapper">
+
+    <resultMap id="result1" type="SYSM310VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="dataFrmeClasCd" column="data_frme_clas_cd"/>
+        <result property="pkgClasCd" column="pkg_clas_cd"/>
+        <result property="dataFrmTypCd" column="data_frm_typ_cd"/>
+        <result property="dataFrmKornNm" column="data_frm_korn_nm"/>
+        <result property="dataFrmEngNm" column="data_frm_eng_nm"/>
+        <result property="dataFrmeTmplCd" column="data_frme_tmpl_cd"/>
+        <result property="dataFrmeTmplClss" column="data_frme_tmpl_clss"/>
+        <result property="itemArngDvCd" column="item_arng_dv_cd"/>
+        <result property="psnTop" column="psn_top"/>
+        <result property="psnLt" column="psn_lt"/>
+        <result property="szWdth" column="sz_wdth"/>
+        <result property="szHght" column="sz_hght"/>
+        <result property="brthItemCnt" column="brth_item_cnt"/>
+        <result property="vrtnItemCnt" column="vrtn_item_cnt"/>
+        <result property="lyotApclDvCd" column="lyot_apcl_dv_cd"/>
+        <result property="scrnDispDrctCd" column="scrn_disp_drct_cd"/>
+        <result property="regDtm" column="reg_dtm"/>
+        <result property="regrId" column="regr_id"/>
+        <result property="regrOrgCd" column="regr_org_cd"/>
+        <result property="lstCorcDtm" column="lst_corc_dtm"/>
+        <result property="lstCorprId" column="lst_corpr_id"/>
+        <result property="lstCorprOrgCd" column="lst_corpr_org_cd"/>
+        <result property="abolDtm" column="abol_dtm"/>
+        <result property="abolmnOrgCd" column="abolmn_org_cd"/>
+        <result property="abolmnId" column="abolmn_id"/>
+        <result property="comCdNm" column="com_cd_nm"/>
+    </resultMap>
+
+    <resultMap id="result2" type="SYSM310VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="usrGrd" column="usr_grd"/>
+    </resultMap>
+
+    <resultMap id="result3" type="SYSM310VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="butnSeq" column="butn_seq"/>
+        <result property="butnTypCd" column="butn_typ_cd"/>
+        <result property="butnId" column="butn_id"/>
+        <result property="butnNm" column="butn_nm"/>
+        <result property="linkSumnPgmId" column="link_sumn_pgm_id"/>
+        <result property="butnStCd" column="butn_st_cd"/>
+    </resultMap>
+
+    <resultMap id="result4" type="SYSM310VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="usrGrd" column="usr_grd"/>
+        <result property="butnSeq" column="butn_seq"/>
+        <result property="butnTypCd" column="butn_typ_cd"/>
+        <result property="butnNm" column="butn_nm"/>
+    </resultMap>
+
+    <select id="SYSM310SEL01" parameterType="SYSM310VO" resultMap="result1">
+        SELECT tdf.*
+        , tcc.com_cd_nm
+        FROM t_data_frm tdf
+        LEFT JOIN t_com_cd tcc ON tdf.data_frme_clas_cd = tcc.com_cd AND tcc.mgnt_item_cd = 'C0018'
+        WHERE tenant_id = #{tenantId}
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmeClasCd)'>
+            AND data_frme_clas_cd = #{dataFrmeClasCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(lyotApclDvCd)'>
+            AND lyot_apcl_dv_cd = #{lyotApclDvCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(scrnDispDrctCd)'>
+            AND scrn_disp_drct_cd = #{scrnDispDrctCd}
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(dataFrmId)'>
+            AND data_frm_id like '%'||#{dataFrmId}||'%'
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmptyObj(srchList)'>
+            AND data_frm_typ_cd IN
+            <foreach collection="srchList" item="item" index="index" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(srchText)'>
+            <choose>
+           	 <when test="srchCond == 1">
+                    AND (data_frm_korn_nm like '%'||#{srchText}||'%' OR data_frm_id like '%'||#{srchText}||'%')
+                </when>
+                <when test="srchCond == 2">
+                    AND data_frm_korn_nm like '%'||#{srchText}||'%'
+                </when>
+                <when test="srchCond == 3">
+                    AND data_frm_id like '%'||#{srchText}||'%'
+                </when>
+            </choose>
+        </if>
+        ORDER BY data_frm_id ASC
+    </select>
+
+    <select id="SYSM310SEL02" parameterType="SYSM310VO" resultMap="result2">
+        SELECT *
+        FROM t_grdby_data_frme_atht tgdfa
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+        ORDER BY usr_grd ASC
+    </select>
+
+    <select id="SYSM310SEL03" parameterType="SYSM310VO" resultMap="result3">
+        SELECT *
+        FROM t_data_frme_butn tdfb
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+          AND butn_st_cd = '1'
+        ORDER BY butn_seq ASC
+    </select>
+
+    <select id="SYSM310SEL04" parameterType="SYSM310VO" resultMap="result4">
+        SELECT tgba.*
+             , tdfb.butn_typ_cd
+             , tdfb.butn_nm
+        FROM t_grdby_butn_atht tgba
+        LEFT JOIN t_data_frme_butn tdfb ON tgba.tenant_id = tdfb.tenant_id AND tgba.data_frm_id = tdfb.data_frm_id AND tgba.butn_seq = tdfb.butn_seq
+        WHERE tgba.tenant_id = #{tenantId}
+          AND tgba.data_frm_id = #{dataFrmId}
+        ORDER BY tgba.usr_grd ASC, tgba.butn_seq ASC
+    </select>
+
+    <insert id="SYSM310INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_grdby_data_frme_atht
+            ( tenant_id
+            , data_frm_id
+            , usr_grd
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            )
+            VALUES
+            ( #{item.tenantId}
+            , #{item.dataFrmId}
+            , #{item.usrGrd}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="SYSM310INS02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_grdby_butn_atht
+            ( tenant_id
+            , data_frm_id
+            , usr_grd
+            , butn_seq
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            )
+            VALUES
+            ( #{item.tenantId}
+            , #{item.dataFrmId}
+            , #{item.usrGrd}
+            , #{item.butnSeq}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="SYSM310DEL01" parameterType="SYSM310VO">
+        DELETE
+        FROM t_grdby_data_frme_atht
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+    </delete>
+
+    <delete id="SYSM310DEL02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM t_grdby_data_frme_atht
+            WHERE tenant_id = #{item.tenantId}
+            AND data_frm_id = #{item.dataFrmId}
+            AND usr_grd = #{item.usrGrd}
+        </foreach>
+    </delete>
+
+    <delete id="SYSM310DEL03" parameterType="SYSM310VO">
+        DELETE
+        FROM t_grdby_butn_atht
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+    </delete>
+
+    <delete id="SYSM310DEL04" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE
+            FROM t_grdby_butn_atht
+            WHERE tenant_id = #{item.tenantId}
+            AND data_frm_id = #{item.dataFrmId}
+            AND usr_grd = #{item.usrGrd}
+            AND butn_seq = #{item.butnSeq}
+        </foreach>
+    </delete>
+</mapper>
+

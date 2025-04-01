@@ -1,0 +1,54 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script type="text/javascript" th:src="@{/js/jquery/3.2.1/jquery.min.js}"></script>
+</head>
+<script type="text/javascript" th:inline="javascript">
+	var _title  = "▒▒▒ 옴니채널 AI CRM 상담 시스템 로그인 ▒▒▒'+ ' Ver 1.0.0.0";
+	var _url;
+
+	$(document).ready(function(){
+		openPopup();
+		self.close();
+	});
+
+	function openPopup() {
+
+		var _width  = '1680';
+		var _height = '1050';
+		var _left   = Math.ceil(( window.screen.width - _width )/2);
+		var _top    = Math.ceil(( window.screen.height - _height )/2);
+
+		let lang = getLang();
+		if(lang.length !=2){
+			lang = 'ko';
+		}
+
+		//사용자 언어설정
+		if(lang == 'en'){
+			_title  = "▒▒▒ EXONA CRM v1.0 System Login ▒▒▒'+ ' Ver 1.0.0.0";
+
+		}else{
+			_title  = "▒▒▒ 차세대 CRM 상담시스템 로그인 ▒▒▒'+ ' Ver 1.0.0.0";
+		}
+
+		let contextPath =  /*[[@{/}]]*/ '';
+		_url    =  contextPath + 'lgin/LGIN000M?lang=' + lang;
+
+		//base size
+		const loginpopup = window.open(_url, _title, 'width='+ _width +', height='+ _height +', left=' + _left + ', top='+ _top );
+
+		if(loginpopup){
+			loginpopup.name = 'ispopup'
+		}
+
+		//full size
+		//window.open(_url, _title, 'height=' + screen.height + ',width=' + screen.width + 'fullscreen=yes');
+	}
+
+	//사용자 Browser 언어 확인
+	function getLang() {
+		var userLang = navigator.language || navigator.userLanguage;
+		return userLang.substring(0,2);
+	}
+</script>
+</html>

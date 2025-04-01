@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM301Mapper">
+    <resultMap id="result1" type="SYSM301VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="patFrmeCd" column="pat_frme_cd"/>
+        <result property="patFrmeTypCd" column="pat_frme_typ_cd"/>
+        <result property="frmeMenuCnt" column="frme_menu_cnt"/>
+        <result property="cnntPgmId" column="cnnt_pgm_id"/>
+        <result property="cnntPgmNm" column="data_frm_korn_nm"/>
+        <result property="scrnDispDrctCd" column="scrn_disp_drct_cd"/>
+        <result property="lyotApclDvCd" column="lyot_apcl_dv_cd"/>
+    </resultMap>
+
+    <resultMap id="result2" type="SYSM301VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="patFrmeCd" column="pat_frme_cd"/>
+        <result property="menuNo" column="menu_no"/>
+        <result property="menuSrtSeq" column="menu_srt_seq"/>
+        <result property="frmePatMenuNm" column="frme_pat_menu_nm"/>
+        <result property="iconTypClss" column="icon_typ_clss"/>
+        <result property="dataFrmeCrdId" column="data_frme_crd_id"/>
+        <result property="titeDispYn" column="tite_disp_yn"/>
+    </resultMap>
+
+    <resultMap id="result3" type="SYSM301VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="patFrmeCd" column="pat_frme_cd"/>
+        <result property="butnSeq" column="butn_seq"/>
+        <result property="butnNm" column="butn_nm"/>
+        <result property="procFnctNm" column="proc_fnct_nm"/>
+    </resultMap>
+
+    <select id="SYSM301SEL01" parameterType="SYSM301VO" resultMap="result1">
+        /* SYSM301_SQL.SYSM301SEL01 */
+        SELECT tfpi.*,
+               tdf.data_frm_korn_nm,
+               tdf.scrn_disp_drct_cd,
+               tdf.lyot_apcl_dv_cd
+        FROM t_fram_pat_info tfpi
+                 LEFT JOIN t_data_frm tdf ON tfpi.tenant_id = tdf.tenant_id AND tfpi.cnnt_pgm_id = tdf.data_frm_id
+        WHERE tfpi.tenant_id = #{tenantId}
+          AND tfpi.data_frm_id = #{dataFrmId}
+          AND tfpi.pat_frme_cd = #{patFrmeCd}
+    </select>
+
+    <select id="SYSM301SEL02" parameterType="SYSM301VO" resultMap="result2">
+        SELECT *
+        FROM t_data_frm_menu
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+          AND pat_frme_cd = #{patFrmeCd}
+        ORDER BY menu_no ASC		<!-- kw20240411 : 상담메인에서 왼쪽탭에 콜백리스트가 먼저 나오는 버그 때문에 수정 (기존에는 menu_srt_seq로 정렬기준을 했는데..이 데이터는 null 값임) -->
+    </select>
+
+    <select id="SYSM301SEL03" parameterType="SYSM301VO" resultMap="result3">
+        SELECT *
+        FROM t_data_frme_butn_info
+        WHERE tenant_id = #{tenantId}
+          AND data_frm_id = #{dataFrmId}
+          AND pat_frme_cd = #{patFrmeCd}
+        ORDER BY butn_seq ASC
+    </select>
+
+    <insert id="SYSM301INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_fram_pat_info
+            (
+            tenant_id
+            , data_frm_id
+            , pat_frme_cd
+            , pat_frme_typ_cd
+            , frme_menu_cnt
+            , cnnt_pgm_id
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            )
+            VALUES
+            (
+            #{item.tenantId}
+            , #{item.dataFrmId}
+            , #{item.patFrmeCd}
+            , #{item.patFrmeTypCd}
+            , #{item.frmeMenuCnt}
+            , #{item.cnntPgmId}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="SYSM301INS02" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_data_frm_menu
+            (
+            tenant_id
+            , data_frm_id
+            , pat_frme_cd
+            , menu_no
+            , menu_srt_seq
+            , frme_pat_menu_nm
+            , icon_typ_clss
+            , data_frme_crd_id
+            , tite_disp_yn
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            , lst_corc_dtm
+            , lst_corpr_id
+            , lst_corpr_org_cd
+            )
+            VALUES
+            (
+            #{item.tenantId}
+            , #{item.dataFrmId}
+            , #{item.patFrmeCd}
+            , (SELECT COALESCE(MAX(menu_no::NUMERIC), 0) + 1 FROM t_data_frm_menu WHERE tenant_id = #{item.tenantId} AND data_frm_id = #{item.dataFrmId})
+            , #{item.menuSrtSeq}
+            , #{item.frmePatMenuNm}
+            , #{item.iconTypClss}
+            , #{item.dataFrmeCrdId}
+            , #{item.titeDispYn}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            , CURRENT_TIMESTAMP
+            , #{item.lstCorprId}
+            , #{item.lstCorprOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="SYSM301INS03" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO t_data_frme_butn_info
+            (
+            tenant_id
+            , data_frm_id
+            , pat_frme_cd
+            , butn_seq
+            , butn_nm
+            , proc_fnct_nm
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            )
+            VALUES
+            (
+            #{item.tenantId}
+            , #{item.dataFrmId}
+            , #{item.patFrmeCd}
+            , (SELECT COALESCE(MAX(butn_seq::NUMERIC), 0) + 1 FROM t_data_frme_butn_info WHERE tenant_id = #{item.tenantId} AND data_frm_id = #{item.dataFrmId} AND pat_frme_cd = #{item.patFrmeCd})
+            , #{item.butnNm}
+            , #{item.procFnctNm}
+            , CURRENT_TIMESTAMP
+            , #{item.regrId}
+            , #{item.regrOrgCd}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="SYSM301DEL01" parameterType="SYSM301VO">
+        DELETE FROM t_fram_pat_info
+        WHERE tenant_id = #{tenantId}
+        AND data_frm_id = #{dataFrmId}
+    </delete>
+
+    <delete id="SYSM301DEL02" parameterType="SYSM301VO">
+        DELETE FROM t_data_frm_menu
+        WHERE tenant_id = #{tenantId}
+        AND data_frm_id = #{dataFrmId}
+    </delete>
+
+    <delete id="SYSM301DEL03" parameterType="SYSM301VO">
+        DELETE FROM t_data_frme_butn_info
+        WHERE tenant_id = #{tenantId}
+        AND data_frm_id = #{dataFrmId}
+    </delete>
+</mapper>
+

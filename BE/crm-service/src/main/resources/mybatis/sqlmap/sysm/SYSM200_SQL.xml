@@ -1,0 +1,765 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM200Mapper">
+	<!-- 사용자정보 목록조회  -->
+	<select id="SYSM200SEL01" parameterType="SYSM200VO" resultType="SYSM200VO">
+			SELECT
+					USR.TENANT_ID									AS tenantId,
+					USR.USR_ID										AS usrId,
+					USR.USR_NM										AS usrNm,
+					USR.ORG_CD										AS orgCd,
+					(WITH RECURSIVE ORG(ORG_CD, HGRK_ORG_CD, ORG_NM, DEPTH, PATH, CYCLE) AS (
+					      SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, 1, ARRAY[ROW(G.ORG_NM)], FALSE
+					      FROM   T_ORG_CD G
+					      WHERE  G.TENANT_ID= #{tenantId}
+					      AND    G.HGRK_ORG_CD IS NULL
+					    UNION ALL
+					      SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, OG.DEPTH + 1, PATH || ROW(G.ORG_NM), ROW(G.ORG_NM) = ANY(PATH)
+					      FROM   T_ORG_CD G, ORG OG
+					      WHERE  G.TENANT_ID= #{tenantId}
+					      AND    G.HGRK_ORG_CD = OG.ORG_CD 
+					      AND NOT CYCLE )
+					      SELECT REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CAST(PATH AS VARCHAR), '{"(\"',''),'\")"',''),',', '→'),'(',''),')}',''),'}',''),'"\"',''),')',''), '{', '')
+                             FROM ORG 
+					      WHERE ORG_CD = USR.ORG_CD	
+					) AS orgPath,
+					CD1.COM_CD_NM                                  AS acStCdNm,
+					CD2.COM_CD_NM                                  AS usrGrdNm
+				FROM T_USR_INFO_MGNT AS USR
+				LEFT JOIN T_TELE_SET_INF TELE
+		            ON   USR.TENANT_ID    = TELE.TENANT_ID
+		            AND  USR.USR_ID       = TELE.USR_ID 
+				LEFT JOIN T_COM_CD CD1
+				    ON   USR.AC_ST_CD     = CD1.COM_CD
+				    AND  CD1.MGNT_ITEM_CD = 'C0021'
+				    AND  CD1.USE_DV_CD    = 'Y'
+				LEFT JOIN T_COM_CD CD2
+				    ON   USR.USR_GRD      = CD2.COM_CD
+				    AND  CD2.MGNT_ITEM_CD = 'C0024'
+				    AND  CD2.USE_DV_CD    = 'Y'  
+				WHERE 1=1
+				AND   USR.TENANT_ID		  = #{tenantId}
+				 <if test='usrList != null and usrList.size !=0'>
+				AND USR.USR_ID IN
+					<foreach collection="usrList" item="usrItem" index="index" separator="," open="(" close=")">
+		 	  			#{usrItem}
+		 			</foreach>				
+				</if>				
+			    <if test='grdList != null and grdList.size !=0'>
+				AND USR.USR_GRD IN
+					<foreach collection="grdList" item="grdItem" index="index" separator="," open="(" close=")">
+		 	  			#{grdItem}
+		 			</foreach>
+		 	 	</if>
+		 	 	<if test='orgList != null and orgList.size !=0'>
+				AND USR.ORG_CD IN
+					<foreach collection="orgList" item="orgItem" index="index" separator="," open="(" close=")">
+		 	  			#{orgItem}
+		 			</foreach>
+		 	 	</if>
+		 	 	<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(retireYn) &amp;&amp; retireYn =="1" '>
+		 	 	AND	(USR.QUAL_LOSS_DD IS NULL OR <![CDATA[USR.QUAL_LOSS_DD >= CURRENT_DATE]]>) 
+		 	 	</if>
+		 	 	<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(retireYn) &amp;&amp; retireYn =="9" '>
+		 	 	AND	<![CDATA[USR.QUAL_LOSS_DD < CURRENT_DATE]]>
+		 	 	</if>
+			<if test='originUsrGrd != null and originUsrGrd != ""'>
+				<if test='originUsrGrd != "900" and originUsrGrd != "910"'>
+					AND USR.usr_grd &lt;= #{originUsrGrd}
+				</if>
+			</if>
+				ORDER BY USR.TENANT_ID, USR.usr_grd DESC, USR.USR_ID
+	</select>
+
+	<!-- 사용자 상세조회(상담채널권한,메뉴권한우선순위,부가솔루션권한 제외) -->
+	<select id="SYSM200SEL02" parameterType="SYSM200VO" resultType="SYSM200VO">
+		 SELECT 
+		 			USR.TENANT_ID									AS tenantId,  
+					USR.USR_ID										AS usrId,     
+					USR.USR_NM										AS usrNm,   
+					USR.USR_GRD                                     AS usrGrd,	
+					CD2.COM_CD_NM                                   AS usrGrdNm,
+					COALESCE(CAST(usr.cnsl_grp_cd as VARCHAR), '')	AS cnslGrpCd,
+					USR.ORG_CD										AS orgCd,  
+					ORG.ORG_NM                                      AS orgNm, 
+					ORG.ORG_PATH                                    AS orgPath, 
+					USR.AC_ST_CD                                    AS acStCd,
+					CD1.COM_CD_NM                                   AS acStCdNm, 
+					USR.SCRT_NO										AS scrtNo,  
+					TO_CHAR(USR.SCRT_NO_LST_UPD_DTM,'YYYY-MM-DD')	AS scrtNoLstUpdDtm, 
+					CURRENT_DATE-USR.SCRT_NO_LST_UPD_DTM::DATE      AS scrtNoOverDays, 
+					USR.PW_ERR_TCNT									AS pwErrTcnt,
+					USR.USR_ALNM									AS usrAlnm, 
+					USR_ALNM_USE_YN                                 AS usrAlnmUseYn,
+					USR.CNTY_TEL_NO									AS cntyTelNo,
+					USR.MBPH_NO										AS mbphNo, 
+					USR.EML_ADDR_ISD								AS emlAddrIsd, 
+					USR.EML_ADDR_ISD_DMN							AS emlAddrIsdDmn,
+					USR.EML_ADDR_ISD_DMN_CD							AS emlAddrIsdDmnCd,
+					USR.EML_ADDR_EXTN								AS emlAddrExtn, 
+					USR.EML_ADDR_EXTN_DMN							AS emlAddrExtnDmn, 
+					USR.EML_ADDR_EXTN_DMN_CD						AS emlAddrExtnDmnCd,
+					USR.QUAL_ACQS_DD								AS qualAcqsDd,   
+					USR.QUAL_LOSS_DD								AS qualLossDd,     
+					USR.UNFY_BLBD_CRE_ATHT_YN                       AS unfyBlbdCreAthtYn, 
+					USR.KLD_CTGR_CRE_ATHT                           AS kldCtgrCreAtht,   
+					USR.ATHT_LVL_ORG_CD                             AS athtLvlOrgCd,     
+					USR.ATHT_LVL_DT_CD                              AS athtLvlDtCd, 					
+					COALESCE(TELE.CTI_USE_YN,'N')   				AS ctiUseYn,  
+					TELE.CTI_AGEN_ID								AS ctiAgenId,  
+					TELE.EXT_NO										AS extNo,
+					TELE.USE_TERM_IP_ADDR							AS useTermIpAddr,
+					CD3.COM_CD                                      AS cntyCd,
+					USR.POTO_IMG_PSN                                AS potoImgPsn,  
+					USR.POTO_IMG_IDX_FILE_NM                        AS potoImgIdxFileNm,
+					COALESCE(USR.KLD_CTGR_CRE_ATHT,'N')             AS kldCtgrCreAtht,
+					COALESCE(USR.UNFY_BLBD_CRE_ATHT_YN,'N')         AS unfyBlbdCreAthtYn,
+					USR.ATHT_LVL_ORG_CD                             AS athtLvlOrgCd,
+					USR.ATHT_LVL_DT_CD                              AS athtLvlDtCd,
+					USR.CHAT_CHNL_PMSS_CNT_CD                       AS chatChnlPmssCntCd,
+					COALESCE(USR.KLD_SCWD_SAVE_YN,'N')              AS kldScwdSaveYn,    
+					COALESCE(USR.AUTO_PFCN_USE_YN ,'N')             AS autoPfcnUseYn,   
+					COALESCE(USR.CMMT_SETLMN_YN,'N')                AS cmmtSetlmnYn,  
+					COALESCE(USR.KLD_MGNT_SETLMN_YN,'N')            AS kldMgntSetlmnYn 
+ 			 FROM      T_USR_INFO_MGNT USR
+ 			 LEFT JOIN T_TELE_SET_INF TELE
+		          ON   USR.TENANT_ID    = TELE.TENANT_ID
+		          AND  USR.USR_ID       = TELE.USR_ID 
+		     LEFT JOIN T_COM_CD CD1
+		          ON   USR.AC_ST_CD     = CD1.COM_CD
+		          AND  CD1.MGNT_ITEM_CD = 'C0021'
+		          AND  CD1.USE_DV_CD    = 'Y'
+		     LEFT JOIN T_COM_CD CD2
+		          ON   USR.USR_GRD      = CD2.COM_CD
+		          AND  CD2.MGNT_ITEM_CD = 'C0024'
+		          AND  CD2.USE_DV_CD    = 'Y'  		
+		     LEFT JOIN T_COM_CD CD3
+		          ON   USR.CNTY_TEL_NO  = CD3.MAPG_VLU1
+		          AND  CD3.MGNT_ITEM_CD = 'C0023'
+		          AND  CD3.USE_DV_CD    = 'Y'		          	          
+		     LEFT JOIN         
+ 			      (WITH RECURSIVE ORG(TENANT_ID, ORG_CD, HGRK_ORG_CD, ORG_NM, DEPTH, PATH, CYCLE) AS (
+					SELECT G.TENANT_ID,  G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, 1, ARRAY[ROW(G.ORG_NM)], FALSE
+					FROM   T_ORG_CD G
+					WHERE  G.TENANT_ID= #{tenantId} 
+					AND    G.HGRK_ORG_CD IS NULL
+					UNION ALL
+					SELECT G.TENANT_ID,  G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, OG.DEPTH + 1, PATH || ROW(G.ORG_NM), ROW(G.ORG_NM) = ANY(PATH)
+					FROM   T_ORG_CD G, ORG OG
+					WHERE  G.TENANT_ID= #{tenantId} 
+					AND    G.HGRK_ORG_CD = OG.ORG_CD 
+					AND NOT CYCLE 
+				)SELECT 
+				    TENANT_ID, 
+				    ORG_CD, 
+				    ORG_NM, 
+				    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CAST(PATH AS VARCHAR), '{"(\"',''),'\")"',''),',', '→'),'(',''),')}',''),'}',''),'"\"',''),')',''), '{', '') AS ORG_PATH
+				FROM ORG 
+				WHERE ORG_CD = #{orgCd}) ORG
+ 			          ON  USR.TENANT_ID = ORG.TENANT_ID
+ 			          AND USR.ORG_CD    = ORG.ORG_CD
+ 			 WHERE 1=1
+ 			 AND   USR.TENANT_ID        = #{tenantId} 
+	         AND   USR.USR_ID           = #{usrId}	
+	</select>	
+		
+	<!-- 사용자 아이디 중복체크 -->
+	<select id="SYSM200SEL03" parameterType="SYSM200VO" resultType="Integer">
+			 SELECT 
+				 COUNT(*) AS CNT
+  			 FROM T_USR_INFO_MGNT
+  			 WHERE TENANT_ID = #{tenantId} 
+		     AND   USR_ID    = #{usrId}	
+	</select>
+	
+	<!-- 태넌트 체크 -->
+	<select id="SYSM200SEL04" parameterType="SYSM200VO" resultType="Integer">
+			 SELECT 
+				 COUNT(*) AS CNT
+  			 FROM T_TENANT_INFO
+  			 WHERE TENANT_ID = #{tenantId} 
+	</select>
+
+	<!-- 사용자기본정보 신규등록/변경 -->
+	<insert id="SYSM200INS01" parameterType="SYSM200VO">
+		INSERT INTO T_USR_INFO_MGNT
+			( 
+				TENANT_ID,
+				USR_ID,
+				SCRT_NO, 
+				AC_ST_CD, 
+				SCRT_NO_LST_UPD_DTM,
+				PW_ERR_TCNT, 			
+				USR_NM, 
+				USR_ALNM, 		
+				USR_ALNM_USE_YN, 
+				USR_GRD,
+				CNSL_GRP_CD,
+				ORG_CD,
+				CNTY_TEL_NO,
+				MBPH_NO,
+				EML_ADDR_ISD,
+				EML_ADDR_ISD_DMN,
+				EML_ADDR_ISD_DMN_CD,
+				EML_ADDR_EXTN,
+				EML_ADDR_EXTN_DMN,
+				EML_ADDR_EXTN_DMN_CD,
+				QUAL_ACQS_DD,
+				QUAL_LOSS_DD,
+				SRCH_KEYWORD1,
+				SRCH_KEYWORD2,
+				UNFY_BLBD_CRE_ATHT_YN,
+				KLD_CTGR_CRE_ATHT,
+				ATHT_LVL_ORG_CD,
+				ATHT_LVL_DT_CD,
+				KLD_SCWD_SAVE_YN,
+				AUTO_PFCN_USE_YN,
+				CMMT_SETLMN_YN,
+				KLD_MGNT_SETLMN_YN,
+				REG_DTM,						
+				REGR_ID,						
+				REGR_ORG_CD,	
+				LST_CORC_DTM,				
+				LST_CORPR_ID,				
+				LST_CORPR_ORG_CD			
+		    )
+		VALUES
+			(
+			    #{tenantId},
+			    #{usrId},
+			  	#{scrtNo},
+			  	#{acStCd},
+			  	TO_TIMESTAMP(#{scrtNoLstUpdDtm}, 'YYYYMMDDHH24MISSMS'),
+			  	0,
+			  	#{usrNm},
+			  	#{usrAlnm},
+			  	#{usrAlnmUseYn},
+			  	#{usrGrd},
+			  	#{cnslGrpCd}::NUMERIC,
+			  	#{orgCd},
+			  	(SELECT TRIM(MAPG_VLU1) FROM T_COM_CD WHERE  MGNT_ITEM_CD ='C0023' AND COM_CD= #{cntyCd}),
+			  	#{mbphNo},
+			  	#{emlAddrIsd},
+			  	#{emlAddrIsdDmn},
+			  	#{emlAddrIsdDmnCd},
+			  	#{emlAddrExtn},
+			  	#{emlAddrExtnDmn},
+			  	#{emlAddrExtnDmnCd},
+			  	CAST(#{qualAcqsDd} AS DATE),
+			  	CAST(#{qualLossDd} AS DATE),
+			  	#{srchKeyword1},
+			  	#{srchKeyword2},
+			  	#{unfyBlbdCreAthtYn},
+			  	#{kldCtgrCreAtht},
+			  	#{athtLvlOrgCd},
+			  	#{athtLvlDtCd},
+			  	#{kldScwdSaveYn},
+			  	#{autoPfcnUseYn},
+			  	#{cmmtSetlmnYn},
+			  	#{kldMgntSetlmnYn},
+			 	NOW(),
+			  	#{regrId},
+			  	#{regrOrgCd},
+			  	NOW(),
+			  	#{lstCorprId},
+			  	#{lstCorprOrgCd}
+			)
+	</insert>
+	
+	<!-- 비밀번호 초기화 -->
+	<update id="SYSM200UPT01"  parameterType="SYSM200VO">
+			UPDATE T_USR_INFO_MGNT
+			SET   
+				SCRT_NO    		        =  #{scrtNo},      <!-- 초기화비밀번호 : 111111 -->
+				SCRT_NO_LST_UPD_DTM    	=  TO_TIMESTAMP(#{scrtNoLstUpdDtm}, 'YYYYMMDDHH24MISSMS'),
+				AC_ST_CD                =  '1',            <!-- 계정상태코드     : 1.정상, 2.계정잠김, 3.사용만료 -->
+			    AC_ST_RSN_CD            =  NULL,           <!-- 계정상태사유코드 : 1.로그인, 2.로그아웃,  3.비밀번호오류, 9.사용기간만료 -->
+			    PW_ERR_TCNT             =  0,
+				LST_CORC_DTM            =  NOW(),
+				LST_CORPR_ID            =  #{lstCorprId},
+				LST_CORPR_ORG_CD        =  #{lstCorprOrgCd}
+  		    WHERE TENANT_ID	            =  #{tenantId} 
+		    AND   USR_ID                =  #{usrId}
+	</update>
+	
+	<!-- 계정잠김해제 -->
+	<update id="SYSM200UPT02"  parameterType="SYSM200VO">
+			UPDATE T_USR_INFO_MGNT
+			SET   
+				AC_ST_CD                =  '1',            <!-- 계정상태코드     : 1.정상, 2.계정잠김, 3.사용만료 -->
+			    AC_ST_RSN_CD            =  NULL,           <!-- 계정상태사유코드 : 1.로그인, 2.로그아웃,  3.비밀번호오류, 9.사용기간만료 -->
+			    PW_ERR_TCNT             =  0,
+				LST_CORC_DTM            =  NOW(),
+				LST_CORPR_ID            =  #{lstCorprId},
+				LST_CORPR_ORG_CD        =  #{lstCorprOrgCd}
+  		    WHERE TENANT_ID	            =  #{tenantId} 
+		    AND   USR_ID                =  #{usrId}
+	</update>
+		
+	<update id="SYSM200UPT03"  parameterType="SYSM200VO">
+		UPDATE T_USR_INFO_MGNT SET LST_CORC_DTM        	= NOW(),
+			LST_CORPR_ID        	= #{lstCorprId},
+			LST_CORPR_ORG_CD    	= #{lstCorprOrgCd},
+			AC_ST_CD                = #{acStCd}, 
+			USR_NM                  = #{usrNm},
+			USR_ALNM                = #{usrAlnm}, 		
+			USR_ALNM_USE_YN         = #{usrAlnmUseYn},  
+			USR_GRD                 = #{usrGrd}, 	
+ 			CNSL_GRP_CD 			= #{cnslGrpCd}::NUMERIC, 	
+			ORG_CD                  = #{orgCd}, 
+			CNTY_TEL_NO             = (SELECT TRIM(MAPG_VLU1) FROM T_COM_CD WHERE  MGNT_ITEM_CD ='C0023' AND COM_CD= #{cntyCd}),
+			MBPH_NO                 = #{mbphNo},
+			EML_ADDR_ISD            = #{emlAddrIsd},
+			EML_ADDR_ISD_DMN        = #{emlAddrIsdDmn}, 
+			EML_ADDR_ISD_DMN_CD     = #{emlAddrIsdDmnCd},
+			EML_ADDR_EXTN           = #{emlAddrExtn},
+			EML_ADDR_EXTN_DMN       = #{emlAddrExtnDmn}, 
+			EML_ADDR_EXTN_DMN_CD    = #{emlAddrExtnDmnCd},
+			QUAL_ACQS_DD            = CAST(#{qualAcqsDd} AS DATE),
+			QUAL_LOSS_DD            = CAST(#{qualLossDd} AS DATE),
+			SRCH_KEYWORD1           = #{srchKeyword1},
+			SRCH_KEYWORD2           = #{srchKeyword2},
+			UNFY_BLBD_CRE_ATHT_YN   = #{unfyBlbdCreAthtYn},
+			KLD_CTGR_CRE_ATHT       = #{kldCtgrCreAtht},
+			ATHT_LVL_ORG_CD         = #{athtLvlOrgCd},
+			ATHT_LVL_DT_CD          = #{athtLvlDtCd},
+			KLD_SCWD_SAVE_YN        = #{kldScwdSaveYn},
+			AUTO_PFCN_USE_YN        = #{autoPfcnUseYn},
+			CMMT_SETLMN_YN          = #{cmmtSetlmnYn},
+			KLD_MGNT_SETLMN_YN      = #{kldMgntSetlmnYn}
+		WHERE TENANT_ID = #{tenantId}
+		AND USR_ID = #{usrId}
+	</update>
+	
+	<!-- 패스워드 변경 기간 연장 (90일)-->
+	<update id="SYSM200UPT04"  parameterType="SYSM200VO">
+			UPDATE T_USR_INFO_MGNT
+			SET   
+				AC_ST_CD                = '1',            <!-- 계정상태코드     : 1.정상, 2.계정잠김, 3.사용만료 -->
+			    AC_ST_RSN_CD            = NULL,           <!-- 계정상태사유코드 : 1.로그인, 2.로그아웃,  3.비밀번호오류, 9.사용기간만료 -->
+		   		SCRT_NO_LST_UPD_DTM  	= TO_TIMESTAMP(#{scrtNoLstUpdDtm}, 'YYYYMMDDHH24MISSMS'),		   		
+	    		SCRT_NO					= #{scrtNo},
+			    PW_ERR_TCNT             = 0,
+				LST_CORC_DTM            = NOW(),
+				LST_CORPR_ID            = #{lstCorprId},
+				LST_CORPR_ORG_CD        = #{lstCorprOrgCd}
+  		    WHERE TENANT_ID	            = #{tenantId} 
+		    AND   USR_ID                = #{usrId}
+	</update>
+	
+	<!-- 관리자가 비밀번호 초기화 했을 경우 로그인 시 패스워드 변경 모달 팝업 발생을 위해 -->
+	<update id="SYSM200UPT05" parameterType="SYSM200VO">
+		/* SYSM200_SYSM200UPT05 */
+		UPDATE T_USR_PASS_HIST SET USR_ID = 'OLD' || #{usrId}
+			,LST_CORC_DTM        	= TO_TIMESTAMP(#{scrtNoLstUpdDtm}, 'YYYYMMDDHH24MISSMS')
+			,LST_CORPR_ID        	= #{lstCorprId}
+			,LST_CORPR_ORG_CD    	= #{lstCorprOrgCd}
+		WHERE TENANT_ID = #{tenantId}
+			AND USR_ID = #{usrId}
+	</update>
+	
+	<!-- 사용자 아이디 삭제 -->
+	<delete id="SYSM210DEL01" parameterType="SYSM200VO">
+			DELETE FROM T_USR_INFO_MGNT
+			WHERE TENANT_ID	 = #{tenantId} 
+			AND   USR_ID     = #{usrId}
+	</delete>
+	
+	<delete id="SYSM210DEL02" parameterType="SYSM200VO">
+			DELETE FROM T_TELE_SET_INF
+			WHERE TENANT_ID = #{tenantId}
+			AND USR_ID = #{usrId}
+	</delete>
+
+	<delete id="SYSM210DEL03" parameterType="SYSM200VO">
+		DELETE FROM T_USR_PASS_HIST
+		WHERE TENANT_ID = #{tenantId}
+		  AND USR_ID in(#{usrId},'OLD' || #{usrId})
+	</delete>
+
+	<delete id="SYSM210DEL04" parameterType="SYSM200VO">
+		DELETE FROM t_envr_stgup
+		WHERE TENANT_ID = #{tenantId}
+		  AND USR_ID = #{usrId}
+	</delete>
+
+	<!--  텔레셋 정보 등록/변경  -->
+	<insert id="SYSM200INS02" parameterType="SYSM200VO">
+		INSERT INTO T_TELE_SET_INF
+				( 
+					TENANT_ID,
+					USR_ID,
+					CTI_USE_YN,
+					CTI_AGEN_ID,
+					EXT_NO,
+					USE_TERM_IP_ADDR,
+					REG_DTM,
+					REGR_ID,
+					REGR_ORG_CD,
+					LST_CORC_DTM,
+					LST_CORPR_ID,
+					LST_CORPR_ORG_CD		
+			    )
+			VALUES
+				(
+				  #{tenantId}
+				  ,#{usrId}
+				  ,#{ctiUseYn}
+				  ,#{ctiAgenId}
+				  ,#{extNo}
+				  ,#{useTermIpAddr} 
+				  ,NOW()
+				  ,#{regrId} 
+				  ,#{regrOrgCd} 
+				  ,NOW()
+				  ,#{lstCorprId} 
+				  ,#{lstCorprOrgCd}   
+				) 
+			ON CONFLICT(TENANT_ID, USR_ID)
+			DO UPDATE 
+			SET   CTI_USE_YN       = #{ctiUseYn}
+			,     CTI_AGEN_ID      = #{ctiAgenId}
+			,     EXT_NO           = #{extNo}
+			,     USE_TERM_IP_ADDR = #{useTermIpAddr} 
+			,     LST_CORC_DTM     = NOW()
+			,     LST_CORPR_ID     = #{lstCorprId}
+			,     LST_CORPR_ORG_CD = #{lstCorprOrgCd}
+	</insert>
+	
+	<!--사용자 상담채널 사용권한 삭제 -->
+	<delete id="SYSM220DEL01" parameterType="SYSM200VO">
+			DELETE FROM T_CNSL_CHNL_ATHT
+			WHERE TENANT_ID	 = #{tenantId} 
+			AND   USR_ID     = #{usrId}
+	</delete>	
+	
+	<!-- 사용자 상담채널 사용권한--> 
+	<insert id="SYSM220INS01" parameterType="java.util.List">
+			INSERT INTO T_CNSL_CHNL_ATHT
+				(
+					TENANT_ID 
+				  ,	USR_ID
+				  ,	CNSL_CHNL_DV_CD
+				  ,	REG_DTM
+				  ,	REGR_ID
+				  ,	REGR_ORG_CD
+				  ,	LST_CORC_DTM
+				  ,	LST_CORPR_ID
+				  ,	LST_CORPR_ORG_CD
+			    )
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+				(
+			        #{item.tenantId}
+				  , #{item.usrId}
+				  , #{item.cnslChnlDvCd}
+				  , NOW()
+				  , #{item.regrId} 
+				  , #{item.regrOrgCd} 
+				  , NOW()
+				  , #{item.lstCorprId} 
+				  , #{item.lstCorprOrgCd}   
+				)
+			</foreach>	
+	</insert>
+	
+	<!-- 상담채널권한(우선순위코드,업무선택여부, 채널수) -->
+	<update id="SYSM220UPT01"  parameterType="SYSM200VO">
+			UPDATE T_CNSL_CHNL_ATHT
+			SET   
+				PRF_RANK_CD             =  '1',
+				BIZ_CHO_YN              =  'Y',
+				<if test='cnslChnlDvCd== "C2"'>
+				CHAT_CHNL_PMSS_CNT_CD   =  #{chatChnlPmssCntCd},   
+				</if>
+				LST_CORC_DTM            =  NOW(),
+				LST_CORPR_ID            =  #{lstCorprId},
+				LST_CORPR_ORG_CD        =  #{lstCorprOrgCd}
+  		    WHERE TENANT_ID	            =  #{tenantId} 
+		    AND   USR_ID                =  #{usrId}
+		    AND   CNSL_CHNL_DV_CD       =  #{cnslChnlDvCd}  
+	</update>
+	
+	<!--사용자 메뉴권한 삭제 -->
+	<delete id="SYSM220DEL02" parameterType="SYSM200VO">
+			DELETE FROM T_USR_MENU_ATHT
+			WHERE TENANT_ID	 = #{tenantId} 
+			AND   USR_ID     = #{usrId}
+	</delete>		
+	
+	<!-- 사용자 메뉴권한 등록 -->
+	<insert id="SYSM220INS02" parameterType="java.util.List">
+			INSERT INTO T_USR_MENU_ATHT
+				( 
+					TENANT_ID
+				  ,	USR_ID
+				  ,	USR_GRD
+				  ,	REG_DTM
+				  ,	REGR_ID
+				  ,	REGR_ORG_CD
+				  ,	LST_CORC_DTM
+				  ,	LST_CORPR_ID
+				  ,	LST_CORPR_ORG_CD
+			    )
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+				(
+				    #{item.tenantId}
+				  , #{item.usrId}
+				  , #{item.usrGrd}
+				  , NOW()
+				  , #{item.regrId} 
+				  , #{item.regrOrgCd} 
+				  , NOW()
+				  , #{item.lstCorprId} 
+				  , #{item.lstCorprOrgCd}   
+				)
+			</foreach>	
+	</insert>
+	
+	<!-- 등급별 메뉴권한(우선순위코드,업무선택여부) -->
+	<update id="SYSM220UPT02"  parameterType="SYSM200VO">
+			UPDATE T_USR_MENU_ATHT
+			SET   
+				PRF_RANK_CD             =  '1',           
+			    BIZ_CHO_YN              =  'Y',
+				LST_CORC_DTM            =  NOW(),
+				LST_CORPR_ID            =  #{lstCorprId},
+				LST_CORPR_ORG_CD        =  #{lstCorprOrgCd}
+  		    WHERE TENANT_ID	            =  #{tenantId} 
+		    AND   USR_ID                =  #{usrId}
+		    AND   USR_GRD               =  #{usrGrd}  
+	</update>
+	
+	<!-- 부가정보 메뉴등급 변경시 사용자정보 상담그룹코드 동기화 -->
+	<update id="SYSM220UPT03"  parameterType="SYSM200VO">
+			UPDATE T_USR_INFO_MGNT
+			SET USR_GRD           = #{usrGrd}
+			,	LST_CORC_DTM      = NOW()
+			,	LST_CORPR_ID      = #{lstCorprId}
+			,	LST_CORPR_ORG_CD  = #{lstCorprOrgCd}
+			WHERE  TENANT_ID      = #{tenantId} 
+			AND    USR_ID         = #{usrId} 
+	</update>	
+	
+	<!-- 사용자등급 초기화 -->
+	<update id="SYSM220UPT04"  parameterType="SYSM200VO">
+			UPDATE T_USR_INFO_MGNT
+			SET USR_GRD           = NULL
+			,	LST_CORC_DTM      = NOW()
+			,	LST_CORPR_ID      = #{lstCorprId}
+			,	LST_CORPR_ORG_CD  = #{lstCorprOrgCd}
+			WHERE  TENANT_ID      = #{tenantId} 
+			AND    USR_ID         = #{usrId} 
+	</update>				
+	
+	<!-- 사용자 부가솔루션사용권한 삭제 -->	
+	<delete id="SYSM220DEL03" parameterType="SYSM200VO">
+		DELETE FROM T_ADTN_SLTN_USE_ATHT
+		WHERE TENANT_ID	 = #{tenantId} 
+		AND   USR_ID     = #{usrId}
+	</delete>
+	
+	<!-- 사용자 부가솔루션 사용권한 신규등록 -->
+	<insert id="SYSM220INS03" parameterType="java.util.List">
+			INSERT INTO T_ADTN_SLTN_USE_ATHT
+				( 
+					TENANT_ID
+				  ,	USR_ID
+				  ,	ADTN_SLTN_DV_CD
+				  ,	REG_DTM
+				  ,	REGR_ID
+				  ,	REGR_ORG_CD
+				  ,	LST_CORC_DTM
+			 	  ,	LST_CORPR_ID
+				  ,	LST_CORPR_ORG_CD
+			    )
+			VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+				(
+				    #{item.tenantId}
+				  , #{item.usrId}
+				  , #{item.solBizChoYnCd}
+				  , NOW()
+				  , #{item.regrId} 
+				  , #{item.regrOrgCd} 
+				  , NOW()
+				  , #{item.lstCorprId} 
+				  , #{item.lstCorprOrgCd}   
+				) 
+			</foreach>				
+	</insert>	
+	
+	<!-- 상담채널권한 리스트 조회 -->
+	<select id="SYSM200SEL05" parameterType="SYSM200VO" resultType="SYSM200VO">
+			SELECT CCD.COM_CD                AS comCd
+			,      CCD.COM_CD_NM             AS comCdNm
+			,      (CASE WHEN CCA.CNSL_CHNL_DV_CD = CCD.COM_CD THEN 'Y' ELSE 'N' END) AS prfRankCd
+			,      CCA.BIZ_CHO_YN            AS chnBizChoYn
+			,      CHAT_CHNL_PMSS_CNT_CD     AS chatChnlPmssCntCd 
+			FROM   T_COM_CD  CCD
+			LEFT OUTER JOIN T_CNSL_CHNL_ATHT CCA
+			ON     CCA.CNSL_CHNL_DV_CD  = CCD.COM_CD
+			AND    CCA.TENANT_ID    = #{tenantId}
+			AND    CCA.USR_ID       = #{usrId}
+			WHERE  1=1
+			AND    CCD.MGNT_ITEM_CD = 'C0030' 
+			AND    CCD.USE_DV_CD    = 'Y'
+			ORDER BY CCD.SRT_SEQ	
+	</select>	
+
+	<!-- 메뉴등급권한 리스트 조회 -->
+	<select id="SYSM200SEL06" parameterType="SYSM200VO" resultType="SYSM200VO">
+			SELECT CCD.COM_CD           AS comCd
+			,      CCD.COM_CD_NM        AS comCdNm
+			,      (CASE WHEN UMA.USR_GRD = CCD.COM_CD THEN 'Y' ELSE 'N' END)  AS prfRankCd
+			,      UMA.BIZ_CHO_YN       AS grdBizChoYn   
+			FROM   T_COM_CD  CCD
+			LEFT OUTER JOIN T_USR_MENU_ATHT UMA
+			ON     UMA.USR_GRD      = CCD.COM_CD
+			AND    UMA.TENANT_ID    = #{tenantId}
+			AND    UMA.USR_ID       = #{usrId}
+			WHERE  1=1
+			AND    CCD.MGNT_ITEM_CD = 'C0024' 
+			AND    CCD.USE_DV_CD    = 'Y'
+	<if test='usrGrd != null and usrGrd != ""'>
+		<if test='usrGrd != "900" and usrGrd != "910"'>
+		AND CCD.com_cd &lt;= #{usrGrd}
+		</if>
+	</if>
+			ORDER BY CCD.SRT_SEQ
+	</select>	
+	
+	<!-- 솔루션권한 리스트 조회 -->
+	<select id="SYSM200SEL07" parameterType="SYSM200VO" resultType="SYSM200VO">
+			SELECT 
+				CCD.COM_CD AS comCd
+				,CCD.COM_CD_NM AS comCdNm
+				,(CASE WHEN SOL.ADTN_SLTN_DV_CD = CCD.COM_CD THEN 'Y' ELSE 'N' END)  AS prfRankCd
+			FROM   T_COM_CD CCD,(
+				SELECT 
+					ADTN_SLTN_DV_CD
+					,ADTN_SVC_CD
+				FROM (
+				    SELECT
+				        tenant_id,
+				        adtn_svc_cd,
+				        use_dv_cd
+				    FROM T_TENANT_ADTN_SVC_INFO 
+				    WHERE tenant_id = #{tenantId}
+				    AND use_dv_cd = 'Y'						-- 테넌트정보관리 - 부가서비스 항목에 등록된 부가서비스만 표시
+				) TASI
+				LEFT OUTER JOIN T_ADTN_SLTN_USE_ATHT ASUA
+				ON TASI.tenant_id = ASUA.tenant_id
+				AND TASI.adtn_svc_cd = ASUA.adtn_sltn_dv_cd
+				AND ASUA.usr_id = #{usrId}
+			)SOL
+			WHERE  1=1
+			AND CCD.MGNT_ITEM_CD     = 'C0011' 
+			AND CCD.USE_DV_CD        = 'Y'     
+			AND CCD.COM_CD           =  SOL.ADTN_SVC_CD
+			ORDER BY CCD.SRT_SEQ
+	</select>		
+	
+	<!-- kw20231123 : 로그인 했을 떄 비밀번호 업데이트 기간 구하기 -->
+	<select id="SYSM200SEL08" parameterType="SYSM200VO" resultType="SYSM200VO">
+			SELECT 
+		 			USR.TENANT_ID									AS tenantId,  
+					USR.USR_ID										AS usrId,     
+					USR.USR_NM										AS usrNm,   
+					USR.USR_GRD                                     AS usrGrd,	
+					COALESCE(CAST(usr.cnsl_grp_cd as VARCHAR), '')	AS cnslGrpCd,
+					USR.ORG_CD										AS orgCd,   
+					USR.AC_ST_CD                                    AS acStCd, 
+					USR.SCRT_NO										AS scrtNo,  
+					TO_CHAR(USR.SCRT_NO_LST_UPD_DTM,'YYYY-MM-DD')	AS scrtNoLstUpdDtm, 
+					CURRENT_DATE-USR.SCRT_NO_LST_UPD_DTM::DATE      AS scrtNoOverDays
+ 			 FROM      T_USR_INFO_MGNT USR
+ 			 WHERE 1=1
+ 			 AND   USR.TENANT_ID        = #{tenantId} 
+	         AND   USR.USR_ID           = #{usrId}	
+	</select>
+	
+	<insert id="SYSM200INS03" parameterType="SYSM200VO">
+		INSERT INTO t_envr_stgup
+		(
+			 tenant_id
+			, usr_id
+			, hlpdk_use_yn
+			, msgr_use_yn
+			, sms_use_yn
+			, kld_srch_use_yn
+			, q_lnk_use_yn
+			, favrlist_use_yn
+			, alrm_use_yn
+			, mini_dash_use_yn
+			, soft_pn_use_yn
+			, mcq_use_yn
+			, daul_moni_use_yn
+			, alrm_effct_use_yn
+			, alrm_poup_effct_use_yn
+			, skn_cd
+			, reg_dtm
+			, regr_id
+			, regr_org_cd
+			, lst_corc_dtm
+			, lst_corpr_id
+			, lst_corc_org_cd
+		)
+		VALUES
+		(
+			 #{tenantId}
+			, #{usrId}
+			, 'Y'				-- hlpdk_use_yn
+			, 'N'				-- msgr_use_yn
+			, 'N'				-- sms_use_yn
+			, 'N'				-- kld_srch_use_yn
+			, 'N'				-- q_lnk_use_yn
+			, 'Y'				-- favrlist_use_yn
+			, 'Y'				-- alrm_use_yn
+			, 'N'				-- mini_dash_use_yn
+			, 'Y'				-- soft_pn_use_yn
+			, 'N'				-- mcq_use_yn
+			, 'N'				-- daul_moni_use_yn
+			, 'Y'				-- alrm_effct_use_yn
+			, 'Y'				-- alrm_poup_effct_use_yn
+			, 'E'				-- skn_cd
+			, NOW()
+			, #{regrId}
+			, #{regrOrgCd}
+			, NOW()
+			, #{regrId}
+			, #{regrOrgCd}
+		)
+	</insert>
+
+	<insert id="SYSM200INS04" parameterType="SYSM200VO">
+		/* SYSM200_SQL.SYSM200INS04 */
+		INSERT INTO T_USR_PASS_HIST
+		(
+		  TENANT_ID
+		, USR_ID
+		, PASS_SEQ
+		, SCRT_NO
+		, REG_DTM
+		, REGR_ID
+		, REGR_ORG_CD
+		, LST_CORC_DTM
+		, LST_CORPR_ID
+		, LST_CORPR_ORG_CD
+		)
+		VALUES
+			(
+			  #{tenantId}
+			, #{usrId}
+			, (SELECT COALESCE(MAX(PASS_SEQ), 0) + 1  FROM T_USR_PASS_HIST)
+			, #{scrtNo}
+			, TO_TIMESTAMP(#{regDtm}, 'YYYYMMDDHH24MISSMS')
+			, #{regrId}
+			, #{regrOrgCd}
+			, TO_TIMESTAMP(#{lstCorcDtm}, 'YYYYMMDDHH24MISSMS')
+			, #{lstCorprId}
+			, #{lstCorprOrgCd}
+			)
+	</insert>
+</mapper>

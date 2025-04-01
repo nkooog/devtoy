@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM436Mapper">
+
+    <resultMap id="result1" type="SYSM436VO">
+    
+    	<result property="srtSeq" 				column="srtSeq"/> 
+        <result property="tenantId" 			column="tenantId"/>
+        <result property="vrbsClasCd" 			column="vrbsClasCd"/>
+        <result property="vrbsCd" 				column="vrbsCd"/>
+        <result property="vrbsVlu"	 			column="vrbsVlu"/>
+        <result property="refn1"	 			column="refn1"/>
+        <result property="refn2" 				column="refn2"/>
+        <result property="refn3" 				column="refn3"/>
+        <result property="refn4"		 		column="refn4"/>
+        <result property="refn5"	 			column="refn5"/>
+        <result property="useYn"	 			column="useYn"/>
+        <result property="lstCorprNm" 			column="lstCorprNm"/>
+        <result property="lstCorcDtm"		 	column="lstCorcDtm"/>
+        <result property="abolmnNm"				column="abolmnNm"/>
+        <result property="aboldTm"				column="aboldTm"/>
+
+    </resultMap>
+
+    <select id="SYSM436SEL01" parameterType="SYSM436VO" resultMap="result1">
+          select
+          	tsvm.vrbs_cd as id,
+			tsvm.srt_seq as srtSeq,
+			tsvm.tenant_id as tenantId,
+			tsvm.vrbs_clas_cd as vrbsClasCd,
+			tsvm.vrbs_clas_cd as vrbsClasCdOld,
+			tsvm.vrbs_cd as vrbsCd,
+			tsvm.vrbs_cd as vrbsCdOld,
+			tsvm.vrbs_vlu as vrbsVlu,
+			tsvm.refn_1 as refn1,
+			tsvm.refn_2 as refn2,
+			tsvm.refn_3 as refn3,
+			tsvm.refn_4 as refn4,
+			tsvm.refn_5 as refn5,
+			use_yn as useYn,
+			tuimLst.usr_nm as lstCorprNm,
+			to_char(tsvm.lst_corc_dtm, 'YYYY-MM-DD') as lstCorcDtm,
+			tuimAbol.usr_nm as abolmnNm,
+			to_char(tsvm.abol_dtm, 'YYYY-MM-DD') as abolDtm
+		from 
+			t_sms_vrbs_mgnt tsvm
+		LEFT JOIN 
+			t_usr_info_mgnt tuimLst on (tuimLst.usr_id = tsvm.lst_corpr_id and tuimLst.tenant_id = tsvm.tenant_id)
+		LEFT JOIN 
+			t_usr_info_mgnt tuimAbol on (tuimAbol.usr_id = tsvm.abolmn_id and tuimAbol.tenant_id = tsvm.tenant_id)
+		
+		<where>
+			tsvm.tenant_id = #{tenantId} 
+			
+			<if test='vrbsClasCd != null and vrbsClasCd != ""'>
+				and tsvm.vrbs_clas_cd = #{vrbsClasCd} 
+			</if>
+			
+			and tsvm.vrbs_vlu LIKE '%'||#{vrbsVlu}||'%' 
+			
+			<if test='useYn != null and useYn != ""'>
+				and tsvm.use_yn = #{useYn}
+			</if>
+		</where>
+		
+		order by vrbsClasCd, vrbsCd, srt_seq asc
+		;
+    </select>
+    
+    <select id="SYSM436SEL02" parameterType="SYSM436VO" resultMap="result1">
+          select 
+          	tsvm.vrbs_cd as vrbsCd
+		from 
+			t_sms_vrbs_mgnt tsvm
+		<where>
+			tsvm.tenant_id = #{tenantId} and
+			vrbs_cd = #{id}
+		</where>
+		
+    </select>    
+    
+    <insert id="SYSM436INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+        INSERT INTO 
+			t_sms_vrbs_mgnt
+			(
+			tenant_id, 
+			vrbs_clas_cd, 
+			vrbs_cd, 
+			vrbs_vlu, 
+			srt_seq, 
+			refn_1, 
+			refn_2, 
+			refn_3, 
+			refn_4,
+			refn_5, 
+			use_yn, 
+			reg_dtm, 
+			regr_id, 
+			regr_org_cd, 
+			lst_corc_dtm, 
+			lst_corpr_id, 
+			lst_corpr_org_cd
+			)
+			values
+			(
+			#{item.tenantId}, 
+			#{item.vrbsClasCd}, 
+			#{item.vrbsCd}, 
+			#{item.vrbsVlu}, 
+			(SELECT COALESCE(MAX(srt_seq::NUMERIC), 0) + 1 FROM t_sms_vrbs_mgnt WHERE tenant_id =#{item.tenantId} AND vrbs_clas_cd = #{item.vrbsClasCd}), 
+			#{item.refn1},   
+			#{item.refn2}, 
+			#{item.refn3}, 
+			#{item.refn4},
+			#{item.refn5},
+			#{item.useYn}, 
+			now(),
+			#{item.regUserId},
+			#{item.regOrgCd},
+			now(),
+			#{item.lstUserId},
+			#{item.lstOrgCd}
+			)
+        </foreach>
+    </insert>
+
+	<update id="SYSM436UPT01" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+            UPDATE t_sms_vrbs_mgnt
+            SET
+	            vrbs_clas_cd = #{item.vrbsClasCd}
+	            , vrbs_cd = #{item.vrbsCd}
+	            , vrbs_vlu = #{item.vrbsVlu}
+	            , srt_seq =  #{item.srtSeq}
+	            , refn_1 = #{item.refn1}
+	            , refn_2 = #{item.refn2}
+	            , refn_3 = #{item.refn3}
+	            , refn_4 = #{item.refn4}
+	            , refn_5 = #{item.refn5}
+	            , use_yn = #{item.useYn}
+	            , lst_corc_dtm = now()
+	            , lst_corpr_id = #{item.lstUserId}
+	            , lst_corpr_org_cd = #{item.lstOrgCd}
+            
+			<where>
+            	tenant_id = #{item.tenantId} AND
+            	vrbs_clas_cd = #{item.vrbsClasCd} AND
+            	vrbs_cd = #{item.vrbsCdOld}
+            </where>
+            
+        </foreach>
+  	</update>
+  	
+  	<update id="SYSM436UPT02" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+            UPDATE t_sms_vrbs_mgnt
+            SET
+	            abol_dtm = now()
+	            , abolmn_id = #{item.aboldUserId}
+	            , abolmn_org_cd = #{item.aboldOrgCd}
+	            , use_yn = 'N'
+			<where>
+            	tenant_id = #{item.tenantId} AND
+            	vrbs_clas_cd = #{item.vrbsClasCd} AND
+            	vrbs_cd = #{item.vrbsCdOld}
+            </where>
+            
+        </foreach>
+  	</update>
+  	
+  	<delete id="SYSM436DEL01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM t_sms_vrbs_mgnt
+			<where> 
+				tenant_id = #{item.tenantId} AND
+				vrbs_clas_cd = #{item.vrbsClasCd} AND
+            	vrbs_cd = #{item.vrbsCd} AND
+            	vrbs_vlu = #{item.vrbsVlu}
+            </where>
+        </foreach>
+    </delete>
+    
+</mapper>
+

@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.lgin.service.mapper.LGIN000Mapper">
+
+	<!-- 사용자 존재 여부 -->
+	<select id="LGIN000SEL01" parameterType="LGIN000VO" resultType="int">
+		SELECT
+			count(*) AS checkCnt
+		FROM  t_usr_info_mgnt
+		<where>
+			<if test="tenantId != null and tenantId != ''">
+				AND   tenant_id = #{tenantId}
+			</if>
+			<if test="usrId != null  and usrId != ''">
+				AND   usr_id = #{usrId}
+			</if>
+		</where>
+	</select>
+
+	<!-- 사용자 정보 조회(session에 담는 정보) -->
+	<select id="LGIN000SEL02" parameterType="LGIN000VO" resultType="LGIN000VO">
+		SELECT
+		TA.tenant_id                 AS tenantId
+		,     TC.fmnm                      AS fmnm
+		, 	  TC.dmn_cd 				   AS dmnCd
+		,     TA.usr_id                    AS usrId
+		,     TA.ac_st_cd                  AS acStCd
+		,     TA.ac_st_rsn_cd              AS acStRsnCd
+		,     TA.scrt_no_lst_upd_dtm       AS scrtNoLstUpdDtm
+		,     TA.pw_err_tcnt               AS pwErrTcnt
+		,     TA.usr_nm                    AS usrNm
+		,     TA.usr_alnm                  AS usrAlnm
+		,     TA.usr_alnm_use_yn           AS usrAlnmUseYn
+		,     TA.poto_img_file_nm          AS potoImgFileNm
+		,     TA.poto_img_idx_file_nm      AS potoImgIdxFileNm
+		,     TA.poto_img_psn              AS potoImgPsn
+		,     TA.org_cd                    AS orgCd
+		,     TB.org_nm                    AS orgNm
+		,	(WITH RECURSIVE ORG(ORG_CD, HGRK_ORG_CD, ORG_NM, DEPTH, PATH, CYCLE) AS (
+		SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, 1, ARRAY[ROW(G.ORG_NM)], FALSE
+		FROM   T_ORG_CD G
+		WHERE  G.TENANT_ID= #{tenantId}
+		AND    G.HGRK_ORG_CD IS NULL
+		UNION ALL
+		SELECT G.ORG_CD, G.HGRK_ORG_CD, G.ORG_NM, OG.DEPTH + 1, PATH || ROW(G.ORG_NM), ROW(G.ORG_NM) = ANY(PATH)
+		FROM   T_ORG_CD G, ORG OG
+		WHERE  G.TENANT_ID= #{tenantId}
+		AND    G.HGRK_ORG_CD = OG.ORG_CD
+		AND NOT CYCLE )
+		SELECT REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CAST(PATH AS VARCHAR), '{"(\"',''),'\")"',''),',', '→'),'(',''),')}',''),'}',''),'"\"',''),')',''), '{', '')
+		FROM ORG
+		WHERE ORG_CD = TA.ORG_CD
+		) AS orgPath
+		,     TA.qual_acqs_dd              AS qualAcqsDd
+		,     TA.qual_loss_dd              AS qualLossDd
+		,     TA.usr_grd                   AS usrGrd
+		,     CD3.COM_CD_NM                AS usrGrdNm
+		,     TA.unfy_blbd_cre_atht_yn     AS unfyBlbdCreAthtYn
+		,     TA.kld_ctgr_cre_atht         AS kldCtgrCreAtht
+		,     TA.atht_lvl_org_cd           AS athtLvlOrgCd
+		,     TA.atht_lvl_dt_cd            AS athtLvlDtCd
+		,     TA.kld_scwd_save_yn          AS kldScwdSaveYn
+		,     TA.auto_pfcn_use_yn          AS autoPfcnUseYn
+		,     TD.cti_use_yn                AS ctiUseYn
+		,     TD.cti_agen_id               AS ctiAgenId
+		,     TD.ext_no                    AS extNo
+		,     TD.use_term_ip_addr          AS ipAddr
+		,     TA.cmmt_setlmn_yn            AS cmmtSetlmnYn
+		,     TA.kld_mgnt_setlmn_yn        AS kldMgntSetlmnYn
+		,     #{mlingCd}                   AS mlingCd
+		,     CD.MAPG_VLU1                 AS mapgVlu1
+		,     TD.cti_agen_pw               AS ctiAgenPw
+		,     CD2.COM_CD                   AS cntyCd
+		,     TA.eml_addr_isd              AS emlAddrIsd
+		,     TA.eml_addr_isd_dmn          AS emlAddrIsdDmn
+		,     TA.eml_addr_extn             AS emlAddrExtn
+		,     TA.eml_addr_extn_dmn         AS emlAddrExtnDmn
+		,     BVI.basc_vlu_dv_cd           AS bascVluDvCd     	<!-- 2022.12.06 sukim 추가 -->
+		,	  TE.usr_grd				   AS menuAtht		  <!-- 2022.01.03 sjyang 추가 : GV  -->
+		, 	  TG.cnsl_chnl_dv_cd		   AS cnslChnlDvCd	  <!-- 2022.01.09 sjyang 추가 : 상담(전화/web) disable 처리  -->
+		,	  BVI1.bs_vl1			       AS personInfoMask  <!-- 2023.07.26 djjung 추가 : 마스킹 상태값  -->
+		FROM  t_usr_info_mgnt              TA
+		LEFT JOIN t_org_cd               TB
+		ON   TA.tenant_id            = TB.tenant_id
+		AND  TA.org_cd               = TB.org_cd
+		LEFT JOIN t_tenant_info          TC
+		ON   TA.tenant_id            = TC.tenant_id
+		LEFT JOIN t_tele_set_inf         TD
+		ON   TA.tenant_id            = TD.tenant_id
+		AND  TA.usr_id               = TD.usr_id
+		LEFT OUTER JOIN t_usr_menu_atht  TE
+		ON   TA.tenant_id            = TE.tenant_id
+		AND  TA.usr_id               = TE.usr_id
+		AND  TE.prf_rank_cd          = '1'
+		LEFT JOIN t_envr_stgup           TF
+		ON   TA.tenant_id            = TF.tenant_id
+		AND  TA.usr_id               = TF.usr_id
+		LEFT JOIN T_COM_CD               CD
+		ON   TF.SKN_CD               = CD.COM_CD
+		AND  CD.MGNT_ITEM_CD         = 'C0044'
+		AND  CD.MLING_CD             = #{mlingCd}
+		AND  CD.USE_DV_CD            = 'Y'
+		LEFT JOIN T_COM_CD               CD2
+		ON   TA.CNTY_TEL_NO          = CD2.MAPG_VLU1
+		AND  CD2.MGNT_ITEM_CD        = 'C0023'
+		AND  CD2.MLING_CD            = #{mlingCd}
+		AND  CD2.USE_DV_CD           = 'Y'
+		LEFT JOIN T_COM_CD               CD3
+		ON   TA.USR_GRD              = CD3.COM_CD
+		AND  CD3.MGNT_ITEM_CD        = 'C0024'
+		AND  CD3.MLING_CD            = #{mlingCd}
+		AND  CD3.USE_DV_CD           = 'Y'
+		LEFT JOIN T_BASC_VLU_INFO        BVI                  <!-- 2022.12.06 sukim 추가 -->
+		ON   TA.tenant_id            = BVI.tenant_id
+		AND  BVI.bs_vl_mgnt_no       = '18'
+		LEFT OUTER JOIN t_cnsl_chnl_atht  TG 					<!-- 2023.01.09 sjyang 추가 -->
+		ON   TA.tenant_id            = TG.tenant_id
+		AND  TA.usr_id               = TG.usr_id
+		AND  TG.prf_rank_cd          = '1'
+		LEFT JOIN T_BASC_VLU_INFO         BVI1                  <!-- 2023.07.25 djjung 추가 -->
+		ON   TA.tenant_id            = BVI1.tenant_id
+		AND  BVI1.bs_vl_mgnt_no       = '37'
+		<where>
+			<if test="tenantId != null and tenantId != ''">
+				AND    TA.tenant_id = #{tenantId}
+			</if>
+			<if test="usrId != null and usrId != ''">
+				AND    TA.usr_id    = #{usrId}
+				AND   (TA.qual_acqs_dd IS NOT NULL OR <![CDATA[TA.qual_acqs_dd <= current_date]]>)
+				AND   (TA.qual_loss_dd IS NULL     OR <![CDATA[TA.qual_loss_dd >= current_date]]>)
+			</if>
+		</where>
+	</select>
+	
+	<!-- 태넌트 다국어 코드조회  -->
+	<select id="LGIN000SEL03" parameterType="LGIN000VO" resultType="LGIN000VO">
+		SELECT
+			mling_cd AS mlingCd
+		FROM  t_tenant_info
+		WHERE 1=1
+		  AND   tenant_id              = #{tenantId}
+	</select>
+
+	<select id="LGIN000SEL04" parameterType="LGIN000VO" resultType="int">
+		SELECT
+			count(*)
+		FROM  t_tenant_info
+		WHERE 1=1
+		  AND   tenant_id = #{tenantId}
+	</select>
+
+	<select id="LGIN000SEL05" parameterType="LGIN000VO" resultType="int">
+		SELECT
+			coalesce(pw_err_tcnt,0) AS pwErrTcnt
+		FROM  t_usr_info_mgnt
+		WHERE 1=1
+		  AND   tenant_id = #{tenantId}
+		  AND   usr_id    = #{usrId}
+	</select>
+
+	<select id="LGIN000SEL06" parameterType="LGIN000VO" resultType="LGIN000VO">
+		SELECT TO_CHAR(current_date,'YYYYMMDD') AS currentDate
+	</select>
+	
+	<!-- 사용자 정보 조회(login 검증용) -->
+	<select id="LGIN000SEL07" parameterType="LGIN000VO" resultType="LGIN000VO">
+		SELECT
+			  tenant_id                 AS tenantId
+		,     usr_id                    AS usrId
+		,     usr_nm                    AS usrNm
+		,     scrt_no                   AS scrtNo
+		,     ac_st_cd                  AS acStCd
+		,     ac_st_rsn_cd              AS acStRsnCd
+		,     scrt_no_lst_upd_dtm       AS scrtNoLstUpdDtm
+		,     pw_err_tcnt               AS pwErrTcnt
+		,     org_cd                    AS orgCd
+		,     qual_acqs_dd              AS qualAcqsDd
+		,     qual_loss_dd              AS qualLossDd
+		,     usr_grd                   AS usrGrd
+		,     #{mlingCd}                AS mlingCd
+		FROM  t_usr_info_mgnt
+		<where>
+			<if test="tenantId != null and tenantId != ''">
+				AND	tenant_id                 = #{tenantId}
+			</if>
+			<if test="usrId != null and usrId != ''">
+				AND	usr_id               	  = #{usrId}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 태넌트 기준정보 조회  -->
+	<select id="LGIN000SEL08" parameterType="LGIN000VO" resultType="LGIN010VO">
+		SELECT
+			tenant_id     AS tenantId
+			 , bs_vl_mgnt_no AS bsVlMgntNo
+			 , bs_vl_nm      AS bsVlNm
+			 , bs_vl1        AS bsVl1
+			 , bs_vl2        AS bsVl2
+			 , bs_vl3        AS bsVl3
+			 , use_yn        AS useYn
+		FROM T_BASC_VLU_INFO
+		WHERE tenant_id     = #{tenantId}
+		  AND   bs_vl_mgnt_no = #{bsVlMgntNo}
+		  AND   use_yn        = 'Y'
+		ORDER BY tenant_id, bs_vl_mgnt_no
+	</select>
+
+	<!-- 태넌트 기준정보 조회  -->
+	<select id="LGIN000SEL09" parameterType="LGIN010VO" resultType="LGIN010VO">
+		SELECT
+			tenant_id     AS tenantId
+			 , bs_vl_mgnt_no AS bsVlMgntNo
+			 , bs_vl_nm      AS bsVlNm
+			 , bs_vl1        AS bsVl1
+			 , bs_vl2        AS bsVl2
+			 , bs_vl3        AS bsVl3
+			 , use_yn        AS useYn
+			 , cast(date_part('hour', current_timestamp) as varchar)   AS  currentHour
+			 , cast(date_part('minute', current_timestamp) as varchar) AS  currentMin
+		FROM T_BASC_VLU_INFO
+		WHERE tenant_id     = #{tenantId}
+		  AND   use_yn        = 'Y'
+		ORDER BY tenant_id, bs_vl_mgnt_no
+	</select>
+
+	<!-- 태넌트 기준정보 조회  -->
+	<select id="LGIN000SEL10" parameterType="LGIN000VO" resultType="LGIN010VO">
+		SELECT
+		tenant_id     AS tenantId
+		,bs_vl_mgnt_no AS bsVlMgntNo
+		,bs_vl_nm      AS bsVlNm
+		,bs_vl1        AS bsVl1
+		,bs_vl2        AS bsVl2
+		,bs_vl3        AS bsVl3
+		,use_yn        AS useYn
+		FROM T_BASC_VLU_INFO
+		WHERE tenant_id     = #{tenantId}
+		AND   bs_vl_mgnt_no = #{bsVlMgntNo}
+		<if test='useYn != null and useYn !=""'>
+			AND use_yn = #{useYn}
+		</if>
+		ORDER BY tenant_id, bs_vl_mgnt_no
+	</select>
+
+	<select id="LGIN000SEL11" parameterType="LGIN000VO" resultType="int">
+		/* LGIN000_SQL.LGIN000SEL11 */
+		SELECT COUNT(*)
+		FROM T_USR_PASS_HIST
+		<where>
+			<if test="tenantId != null and tenantId != ''" >
+				AND TENANT_ID = #{tenantId}
+			</if>
+			<if test="usrId != null and usrId != ''" >
+				AND USR_ID = #{usrId}
+			</if>
+			<if test="scrtNo != null and scrtNo != ''" >
+				AND SCRT_NO = #{scrtNo}
+			</if>
+			<if test="true" >
+				AND TO_CHAR(REG_DTM, 'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(NOW()- INTERVAL '1 year', 'YYYY-MM-DD')
+			</if>
+		</where>
+	</select>
+	
+	<select id="LGIN000SEL12" parameterType="LGIN000VO" resultType="LGIN000VO">
+		/* LGIN000_SQL.LGIN000SEL12 */
+		SELECT
+			scrt_no as scrtNo
+			,reg_dtm as regDtm
+		  FROM T_USR_PASS_HIST
+		<where>
+			<if test="tenantId != null and tenantId != ''" >
+				AND TENANT_ID = #{tenantId}
+			</if>
+			<if test="usrId != null and usrId != ''" >
+				AND USR_ID IN ('OLD' || #{usrId},  #{usrId})
+			</if>
+			<if test="true" >
+				AND TO_CHAR(REG_DTM, 'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(NOW()- INTERVAL '1 year', 'YYYY-MM-DD')
+			</if>
+		</where>
+	</select>
+	
+	<select id="LGIN000USRGRDCHECK" parameterType="LGIN000VO" resultType="LGIN000VO">
+		SELECT
+			COALESCE(
+					(
+						SELECT
+							USR_GRD
+						FROM
+							t_usr_info_mgnt
+						WHERE usr_id =  #{usrId}
+						  AND tenant_id = #{tenantId}
+					LIMIT 1
+				)
+    		,'0') AS usrGrd
+	</select>
+	
+
+	<!-- 로그인 이력생성 : 로그인 경우 -->
+	<insert id="LGIN000INS01" parameterType="LGIN000VO">
+		INSERT INTO t_sys_log (tenant_id, usr_id, sys_log_seq, sys_log_dd_si, sys_log_dv_cd, data_frme_no, pgm_id, sys_log_msg, evnt_rslt_cd, reg_dtm)
+		VALUES (
+				 #{tenantId}
+			   , #{usrId}
+			   , (select coalesce(max(sys_log_seq),0)+1 from t_sys_log where tenant_id = #{tenantId} and usr_id = #{usrId})
+			   , current_date
+			   , #{sysLogDvCd}
+			   , null
+			   , 'LGIN000M'
+			   , #{sysLogMsg}
+			   , null
+			   , now()
+			   )
+	</insert>
+
+	<!-- 로그인 이력생성 : 로그아웃 경우 -->
+	<insert id="LGIN000INS02" parameterType="LGIN000VO">
+		INSERT INTO t_sys_log (tenant_id, usr_id, sys_log_seq, sys_log_dd_si, sys_log_dv_cd, data_frme_no, pgm_id, sys_log_msg, evnt_rslt_cd, reg_dtm)
+		VALUES (
+				 #{tenantId}
+			   , #{usrId}
+			   , (select coalesce(max(sys_log_seq),0)+1 from t_sys_log where tenant_id = #{tenantId} and usr_id = #{usrId})
+			   , current_date
+			   , #{sysLogDvCd}
+			   , null
+			   , 'FRME180P'
+			   , #{sysLogMsg}
+			   , null
+			   , now()
+			   )
+	</insert>
+
+	<!-- 비밀번호 오류횟수 초과 또는 비밀번호 변경일 만료로 사용만료가 된 경우 -->
+	<update id="LGIN000UPT01" parameterType="LGIN000VO">
+		UPDATE t_usr_info_mgnt
+		SET    ac_st_cd              =  #{acStCd}      <!-- 계정상태코드     : 1.정상, 2.계정잠김, 3.휴면 , 9 사용만료 -->
+		,  ac_st_rsn_cd          =  #{acStRsnCd}   <!-- 계정상태사유코드 : 1.로그인, 2.로그아웃,  3.비밀번호오류, 9.사용기간만료 -->
+		,  lst_corc_dtm          =  NOW()
+		,  lst_corpr_id          =  #{usrId}
+		,  lst_corpr_org_cd      =  #{orgCd}
+		WHERE 1=1
+		AND   tenant_id              = #{tenantId}
+		AND   usr_id                 = #{usrId}
+	</update>
+
+	<!-- 정상 로그인인 경우 -->
+	<update id="LGIN000UPT02" parameterType="LGIN000VO">
+		UPDATE t_usr_info_mgnt
+		SET    ac_st_cd              =  '1'       <!-- 1. 정상 -->
+		,  ac_st_rsn_cd          =  '1'       <!-- 1. 로그인 -->
+		,  pw_err_tcnt           =  0         <!-- 오류건수 초기화 -->
+		,  lst_lgin_dtm          =  NOW()
+		<!-- 사용자가 자리를 바꾸면 텔레셋 정보의 ip와 내선번호를 옮길 자리의 것으로 변경해줘야 함. -->
+		,  (lst_lgin_ip_addr,  lst_lgin_ext_no) = (SELECT use_term_ip_addr, ext_no
+		FROM   t_tele_set_inf
+		WHERE  tenant_id = #{tenantId}
+		AND    usr_id    = #{usrId})
+		,  lst_corc_dtm          =  NOW()
+		,  lst_corpr_id          =  #{usrId}
+		,  lst_corpr_org_cd      =  #{orgCd}
+		WHERE 1=1
+		AND   tenant_id              =  #{tenantId}
+		AND   usr_id                 =  #{usrId}
+	</update>
+
+	<!-- 로그아웃 경우 -->
+	<update id="LGIN000UPT03" parameterType="LGIN000VO">
+		UPDATE t_usr_info_mgnt
+		SET    ac_st_rsn_cd          =  '2'       <!-- 2. 로그아웃 -->
+		,  lst_lgout_dtm         =  NOW()
+		,  lst_lgout_ip_addr     =  #{ipAddr}
+		,  lst_lgout_ext_no      =  #{extNo}
+		,  lst_corc_dtm          =  NOW()
+		,  lst_corpr_id          =  #{usrId}
+		,  lst_corpr_org_cd      =  #{orgCd}
+		WHERE 1=1
+		AND   tenant_id              = #{tenantId}
+		AND   usr_id                 = #{usrId}
+	</update>
+
+	<!-- 비밀번호 오류허용횟수 이내에서 비밀번호만 틀린 경우 -->
+	<update id="LGIN000UPT04" parameterType="LGIN000VO">
+		UPDATE t_usr_info_mgnt
+		SET    ac_st_rsn_cd          =  '3'         <!-- 3. 비밀번호오류 -->
+		,  pw_err_tcnt           =  coalesce(pw_err_tcnt,0) + 1
+		,  lst_corc_dtm          =  NOW()
+		,  lst_corpr_id          =  #{usrId}
+		,  lst_corpr_org_cd      =  #{orgCd}
+		WHERE 1=1
+		AND   tenant_id              = #{tenantId}
+		AND   usr_id                 = #{usrId}
+	</update>
+		
+	<!-- 비밀번호 변경 -->
+	<update id="LGIN000UPT05" parameterType="LGIN000VO">
+		UPDATE t_usr_info_mgnt
+		SET    ac_st_cd              =  '1'
+		  ,  scrt_no          	 =  #{scrtNo}
+		  ,  scrt_no_lst_upd_dtm	 =  #{scrtNoLstUpdDtm}
+		  ,  lst_corc_dtm          =  NOW()
+		  ,  lst_corpr_id          =  #{usrId}
+		  ,  lst_corpr_org_cd      =  #{orgCd}
+		WHERE 1=1
+		  AND   tenant_id              = #{tenantId}
+		  AND   usr_id                 = #{usrId}
+	</update>
+	
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM211Mapper">
+	<select id="SYSM211SEL01" parameterType="SYSM211VO" resultType="SYSM211VO">
+			SELECT
+				USR.TENANT_ID                   AS tenantId,
+				TNT.fmnm                        AS fmnm,
+				USR.USR_ID						AS usrId,
+				USR.USR_NM						AS usrNm,
+				CD.COM_CD_NM                    AS usrGrdNm, 
+				ORG.ORG_NM                      AS orgNm,
+				CD2.COM_CD_NM                   AS acStCdNm,
+				CD3.COM_CD_NM                   AS acStRsnCdNm   
+			FROM       T_USR_INFO_MGNT USR
+			LEFT JOIN  T_TENANT_INFO   TNT
+			      ON   USR.TENANT_ID    = TNT.TENANT_ID  
+			LEFT JOIN  T_ORG_CD        ORG
+				  ON   USR.TENANT_ID    = ORG.TENANT_ID  
+			      AND  USR.ORG_CD       = ORG.ORG_CD  
+			LEFT JOIN  T_COM_CD        CD
+		          ON   USR.USR_GRD      = CD.COM_CD
+		          AND  CD.MGNT_ITEM_CD  = 'C0024'
+		          AND  CD.USE_DV_CD     = 'Y'
+			LEFT JOIN  T_COM_CD        CD2
+		          ON   USR.AC_ST_CD     = CD2.COM_CD
+		          AND  CD2.MGNT_ITEM_CD = 'C0021'
+		          AND  CD2.USE_DV_CD    = 'Y'
+			LEFT JOIN  T_COM_CD        CD3
+		          ON   USR.AC_ST_RSN_CD = CD3.COM_CD
+		          AND  CD3.MGNT_ITEM_CD = 'C0022'
+		          AND  CD3.USE_DV_CD    = 'Y'
+			WHERE 1=1
+			AND USR.TENANT_ID =  #{tenantId}
+			<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(keywordLen)'>
+				<if test="keywordLen == 1">
+					AND USR.SRCH_KEYWORD1	= #{srchKeyword1}
+				</if>
+				<if test="keywordLen == 2">
+					AND USR.SRCH_KEYWORD2	= #{srchKeyword2}
+				</if>
+				<if test="keywordLen == 3">
+					AND USR.USR_NM			=  #{usrNm}
+				</if>
+			</if>
+			<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(cmmtSetlmnYn)'>
+				AND USR.cmmt_setlmn_yn			=  #{cmmtSetlmnYn}
+			</if>
+			<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(kldMgntSetlmnYn)'>
+				AND USR.kld_mgnt_setlmn_yn			=  #{kldMgntSetlmnYn}
+			</if>
+			
+			<if test='usrGrd != null and usrGrd != ""'>
+				<if test='usrGrd != "900" and usrGrd != "910"'>
+				AND USR.usr_grd &lt;= #{usrGrd}
+				</if>
+			</if>
+				
+	</select>
+</mapper>

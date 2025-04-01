@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM520Mapper">
+
+    <resultMap id="result1" type="SYSM520VO">
+        <result property="tenantId" 			column="tenantId"/>
+        <result property="cnslGrpCd" 			column="cnslGrpCd"/>
+        <result property="cnslGrpCdOld" 			column="cnslGrpCdOld"/>
+        <result property="cnslGrpNm"	 		column="cnslGrpNm"/>
+        <result property="cnslGrpNmOld"	 		column="cnslGrpNmOld"/>
+        <result property="grpCdUseYn" 			column="useYn"/>
+        <result property="grpCdUseYnOld" 			column="useYn"/>
+        <result property="regUsrNm"		 		column="regUsrNm"/>
+        <result property="regOrgNm"	 			column="regOrgNm"/>
+        <result property="regDtm"	 			column="regDtm"/>
+        <result property="lstUsrNm" 			column="lstUsrNm"/>
+        <result property="lstOrgNm"		 		column="lstOrgNm"/>
+        <result property="lstCorcDtm"			column="lstCorcDtm"/>
+        <result property="cnt"			column="cnt"/>
+    </resultMap>
+
+    <select id="SYSM520SEL01" parameterType="SYSM520VO" resultMap="result1">
+          select 
+          	tcg.cnsl_grp_cd as id,
+			tcg.tenant_id as tenantId,
+			tcg.cnsl_grp_cd as cnslGrpCd,
+			tcg.cnsl_grp_nm as cnslGrpNm,
+			tcg.cnsl_grp_nm as cnslGrpNmOld,
+			tcg.cnsl_grp_queue_id as cnslGrpQueueId,
+			tcg.use_yn as useYn,
+			tuimReg.usr_nm as regUsrNm,
+			tocReg.org_nm as regOrgNm,
+			to_char(tcg.reg_dtm, 'YYYY-MM-DD HH24:MI:SS') as regDtm,
+			tuimLst.usr_nm as lstUsrNm,
+			tocLst.org_nm as lstOrgNm,
+			to_char(tcg.lst_corc_dtm, 'YYYY-MM-DD HH24:MI:SS') as lstCorcDtm,
+            (
+                SELECT COUNT(*)
+                  FROM T_USR_INFO_MGNT x
+                 WHERE x.TENANT_ID = tcg.TENANT_ID
+                   AND x.CNSL_GRP_CD  = tcg.CNSL_GRP_CD
+            ) AS cnt
+		from 
+			t_cnsl_grp tcg
+		LEFT JOIN 
+			t_usr_info_mgnt tuimReg on (tuimReg.usr_id = tcg.regr_id and tuimReg.tenant_id = tcg.tenant_id)
+		LEFT JOIN 
+			t_usr_info_mgnt tuimLst on (tuimLst.usr_id = tcg.lst_corpr_id  and tuimLst.tenant_id = tcg.tenant_id)
+		LEFT JOIN 
+			t_org_cd tocReg on (tocReg.org_cd = tcg.regr_org_cd and tocReg.tenant_id = tcg.tenant_id)
+		LEFT join
+			t_org_cd tocLst on (tocLst.org_cd = tcg.lst_corc_org_cd and tocLst.tenant_id = tcg.tenant_id)
+		<where>
+			tcg.tenant_id = #{tenantId}
+			and to_char(tcg.cnsl_grp_cd, '999999') like '%'||#{cnslGroupCode}||'%' 
+			and	tcg.cnsl_grp_nm LIKE '%'||#{cnslGroupName}||'%'
+			and	tcg.use_yn LIKE #{useYn}
+		</where>
+		order by tcg.cnsl_grp_cd ASC
+    </select>
+    
+    <select id="SYSM520SEL02" parameterType="SYSM520VO" resultMap="result1">
+          select 
+          	tcg.cnsl_grp_cd as cnslGrpNm
+		from 
+			t_cnsl_grp tcg		
+		<where>
+			tcg.tenant_id = #{tenantId} and
+			cnsl_grp_cd = cast(#{id} as INTEGER)
+		</where>
+		
+    </select>
+    
+    <select id="SYSM520SEL03" parameterType="SYSM520VO" resultMap="result1">
+          select 
+          	tcg.cnsl_grp_nm as cnslGrpNm
+		from 
+			t_cnsl_grp tcg
+		
+		<where>
+			tcg.tenant_id = #{tenantId} and
+			cnsl_grp_nm = #{cnsl_grp_nm};
+		</where>
+		
+    </select>
+    
+    
+    <insert id="SYSM520INS01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+        INSERT INTO 
+            t_cnsl_grp
+            (
+            tenant_id
+            , cnsl_grp_cd
+            , cnsl_grp_nm
+            , cnsl_grp_queue_id
+            , use_yn
+            , reg_dtm
+            , regr_id
+            , regr_org_cd
+            , lst_corc_dtm
+            , lst_corpr_id
+            , lst_corc_org_cd
+            )
+            VALUES
+            (
+            #{item.tenantId}
+            , cast(#{item.cnslGrpCd} as INTEGER)
+            , #{item.cnslGrpNm}
+            , #{item.cnslGrpQueueId}
+            , #{item.grpCdUseYn}
+            , now()
+            , #{item.regUserId}
+            , #{item.regOrgCd}
+            , now()
+            , #{item.lstUserId}
+            , #{item.lstOrgCd}
+            
+            )
+        </foreach>
+    </insert>
+
+	<update id="SYSM520UPT01" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+            UPDATE public.t_cnsl_grp
+            SET
+	            cnsl_grp_cd = cast(#{item.cnslGrpCd} as INTEGER)
+	            , cnsl_grp_nm = #{item.cnslGrpNm}
+	            , cnsl_grp_queue_id = #{item.cnslGrpQueueId}
+	            , use_yn = #{item.grpCdUseYn}
+	            , lst_corc_dtm = now()
+	            , lst_corpr_id = #{item.lstUserId}
+	            , lst_corc_org_cd = #{item.lstOrgCd}
+            
+			<where>
+            	tenant_id = #{item.tenantId}
+            	AND cnsl_grp_cd = cast(#{item.id} as INTEGER);
+            </where>
+            
+        </foreach>
+  	</update>
+  	
+  	<delete id="SYSM520DEL01" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM t_cnsl_grp
+            
+			<where> 
+            	cnsl_grp_cd = cast(#{item.id} as INTEGER)
+            	AND cnsl_grp_nm = #{item.cnslGrpNmOld}
+            </where>
+        </foreach>
+    </delete>
+
+</mapper>
+

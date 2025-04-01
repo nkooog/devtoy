@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM400Mapper">
+	
+	<!-- 작업스케줄정보 목록 & 상세내역 조회 -->
+	<select id="SYSM400SEL01" parameterType="SYSM400VO" resultType="SYSM400VO">
+		SELECT 		
+			JSM.tenant_id        AS tenantId,
+			TNT.fmnm             AS fmnm,
+			JSM.job_no           AS jobNo,
+			JSM.job_nm           AS jobNm,
+			JSM.job_cyc_cd       AS jobCycCd,
+			CD1.COM_CD_NM        AS jobCycCdNm,
+			JSM.job_clas_cd      AS jobClasCd,
+			CD2.COM_CD_NM        AS jobClasCdNm,
+			JSM.job_exec_tm      AS jobExecTm,
+			JSM.file_nm          AS fileNm,
+			JSM.file_path        AS filePath,
+			JSM.proc_pgm_kind_cd AS procPgmKindCd,
+			CD3.COM_CD_NM        AS procPgmKindCdNm,
+			JSM.proc_pgm_nm      AS procPgmNm,
+			JSM.prced_job_no     AS prcedJobNo,
+			JSM.exec_sche_dt     AS execScheDt,
+			JSM.REPT_YN          AS reptYn,
+			JSM.USE_YN           AS useYn,
+			CD5.COM_CD_NM        AS useYnCdNm,
+			TO_CHAR(JSM.reg_dtm,'YYYY-MM-DD HH24:MI:SS') AS regDtm, 
+			JSM.regr_id          AS regrId,
+			USR.usr_nm           AS regrUsrNm,  <!-- 등록자명 -->
+			JSM.lst_corpr_id     AS lstCorprId,
+			USR2.usr_nm          AS lstCorprUsrNm,  <!-- 수정자명 -->
+			TO_CHAR(JSM.lst_corc_dtm,'YYYY-MM-DD HH24:MI:SS') AS lstCorcDtm,
+			TO_CHAR(JSM.abol_dtm ,'YYYY-MM-DD HH24:MI:SS') 	as abolDtm,
+			JSM.abolmn_id 		AS abolmnId,
+			JSM.abolmn_org_cd 	AS abolmnOrgCd 			
+		FROM  t_job_schd_mgnt JSM
+		LEFT JOIN t_tenant_info   TNT    
+			 ON  JSM.tenant_id       = TNT.tenant_id
+		LEFT JOIN t_usr_info_mgnt USR
+			ON  JSM.tenant_id = USR.tenant_id AND JSM.regr_id  = USR.usr_id  
+		LEFT JOIN t_usr_info_mgnt USR2
+			ON  JSM.tenant_id = USR2.tenant_id and JSM.lst_corpr_id    = USR2.usr_id
+		LEFT JOIN T_COM_CD        CD1
+			 ON   JSM.job_cyc_cd     = CD1.COM_CD
+			 AND  CD1.MGNT_ITEM_CD   = 'C0222'
+			 AND  CD1.MLING_CD       = #{mlingCd}
+			 AND  CD1.USE_DV_CD      = 'Y'
+		LEFT JOIN T_COM_CD        CD2
+			 ON   JSM.job_clas_cd    = CD2.COM_CD
+			 AND  CD2.MGNT_ITEM_CD   = 'C0223'
+			 AND  CD2.MLING_CD       = #{mlingCd}
+			 AND  CD2.USE_DV_CD      = 'Y' 	
+		LEFT JOIN T_COM_CD        CD3
+			 ON   JSM.proc_pgm_kind_cd = CD3.COM_CD
+			 AND  CD3.MGNT_ITEM_CD   = 'C0232'
+			 AND  CD3.MLING_CD       = #{mlingCd}
+			 AND  CD3.USE_DV_CD      = 'Y' 		
+		LEFT JOIN T_COM_CD        CD5
+			 ON   JSM.use_yn         = CD5.COM_CD
+			 AND  CD5.MGNT_ITEM_CD   = 'C0003'
+			 AND  CD5.MLING_CD       = #{mlingCd}
+			 AND  CD5.USE_DV_CD      = 'Y' 	 
+		WHERE 1=1
+		AND  JSM.tenant_id   = #{tenantId}
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(jobNo)'>
+		AND   JSM.job_no      =  #{jobNo}
+		</if>
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(jobNm)'>
+		AND   JSM.job_nm      LIKE  #{jobNm} || '%'
+		</if>
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(jobCycCd)'>
+		AND   JSM.job_cyc_cd  =  #{jobCycCd}
+		</if>
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(jobClasCd)'>
+		AND   JSM.job_clas_cd =  #{jobClasCd}
+		</if>
+		<if test='!@bcs.aicrm.broadcns.util.com.ComnFun@isEmpty(useYn)'>
+		AND   JSM.use_yn      =  #{useYn}
+		</if>
+		ORDER BY JSM.tenant_id, JSM.job_no	
+	</select>
+	
+	<!--중복 작업번호 체크 -->
+	<select id="SYSM400SEL02" parameterType="SYSM400VO" resultType="Integer">
+			 SELECT 
+				 COUNT(*) AS CNT
+  			 FROM T_JOB_SCHD_MGNT
+  			 WHERE TENANT_ID = #{tenantId} 
+  			 AND   JOB_NO    = #{jobNo}
+	</select>
+		
+	<!-- 작업 실행 여부 확인 -->
+	<select id="SYSM400SEL03" parameterType="SYSM400VO" resultType="Integer">
+		select
+			count(tenant_id) as cnt 
+		from t_job_schd_proc_hist
+		where tenant_id = #{tenantId}
+		and job_no = #{jobNo}
+		and proc_dt = to_char(now(),'YYYYMMDD')
+	</select>
+		
+	<!-- 작업스케줄정보 신규등록/변경 -->
+	<insert id="SYSM400INS01" parameterType="SYSM400VO">
+		INSERT INTO T_JOB_SCHD_MGNT
+				( 
+					TENANT_ID,
+					JOB_NO,
+					JOB_NM, 
+					JOB_CYC_CD, 
+					JOB_CLAS_CD,
+					JOB_EXEC_TM, 			
+					FILE_PATH, 
+					FILE_NM, 		
+					PROC_PGM_KIND_CD,  	
+					PROC_PGM_NM,
+					PRCED_JOB_NO,
+					EXEC_SCHE_DT,
+					REPT_YN,
+					USE_YN,
+					REG_DTM,
+					REGR_ID,						
+					REGR_ORG_CD,	
+					LST_CORC_DTM,				
+					LST_CORPR_ID,				
+					LST_CORPR_ORG_CD			
+			    )
+			VALUES
+				(
+				    #{tenantId},
+				    #{jobNo},
+				  	#{jobNm},
+				  	#{jobCycCd},
+				  	#{jobClasCd},
+				  	#{jobExecTm}, <!-- replace(#{jobExecTm}, ' ', ''), -->
+				  	#{filePath},
+				  	#{fileNm},
+				  	#{procPgmKindCd},
+				  	#{procPgmNm},
+				  	#{prcedJobNo},
+				  	#{execScheDt},
+				  	#{reptYn},
+				  	#{useYn},			  	
+				 	NOW(),
+				  	#{regrId},
+				  	#{regrOrgCd},
+				  	NOW(),
+				  	#{lstCorprId},
+				  	#{lstCorprOrgCd}
+				) 
+			ON CONFLICT(TENANT_ID, JOB_NO)
+			DO UPDATE 
+			SET 
+					JOB_NM              = #{jobNm},
+					JOB_CYC_CD          = #{jobCycCd},
+					JOB_CLAS_CD         = #{jobClasCd},
+					JOB_EXEC_TM         = #{jobExecTm}, <!-- replace(#{jobExecTm}, ' ', ''), -->
+					FILE_PATH           = #{filePath},
+					FILE_NM             = #{fileNm},
+					PROC_PGM_KIND_CD    = #{procPgmKindCd},
+					PROC_PGM_NM         = #{procPgmNm},
+					PRCED_JOB_NO        = #{prcedJobNo},
+					EXEC_SCHE_DT        = #{execScheDt},
+					REPT_YN             = #{reptYn},
+					USE_YN              = #{useYn},
+					LST_CORC_DTM        = NOW(),
+					LST_CORPR_ID        = #{lstCorprId},
+					LST_CORPR_ORG_CD    = #{lstCorprOrgCd}
+	</insert>		
+
+	<!-- 작업스케줄 폐기 -->
+	<delete id="SYSM400DEL01" parameterType="SYSM400VO">
+		UPDATE T_JOB_SCHD_MGNT
+			SET abol_dtm = NOW()
+				,abolmn_id			= #{abolmnId}
+				,abolmn_org_cd		= #{abolmnOrgCd}
+				,lst_corc_dtm 		= NOW()
+				,lst_corpr_id 		= #{lstCorprId}
+				,lst_corpr_org_cd 	= #{lstCorprOrgCd}
+				,use_yn				= 'N'
+		WHERE  TENANT_ID  =  #{tenantId}
+		AND    JOB_NO     =  #{jobNo}	
+	</delete>
+	
+	<!-- 작업 삭제 -->
+	<delete id="SYSM400DEL02" parameterType="SYSM400VO">
+		DELETE FROM T_JOB_SCHD_MGNT
+		WHERE  TENANT_ID  =  #{tenantId}
+		AND    JOB_NO     =  #{jobNo}	
+	</delete>
+		
+</mapper>

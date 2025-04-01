@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.sysm.service.mapper.SYSM110Mapper">
+
+	
+	<select id="SYSM110SEL02" parameterType="SYSM100VO" resultType="SYSM110VO"> <!-- 2022.01.04 sukim, resultType="egovMap" => map => VO -->
+			SELECT  ttasi.tenant_id			    AS tenantId
+				  ,ttasi.adtn_svc_seq			AS adtnSvcSeq
+				  ,ttasi.adtn_svc_seq			AS id
+				  ,ttasi.adtn_svc_cd			AS adtnSvcCd
+				  ,ttasi.use_dv_cd				AS useDvCd
+				  ,tcc.com_cd_nm 				AS adtnSvcNm
+				  ,COALESCE(ttasi.conn_addr,'')	AS connAddr
+				  ,COALESCE(ttasi.lcns_cunt,'') AS lcnsCunt
+			FROM t_tenant_adtn_svc_info ttasi,
+					t_com_cd tcc 
+			WHERE 1=1
+			AND tcc.mgnt_item_cd = 'C0011'
+			AND ttasi.adtn_svc_cd = tcc.com_cd 
+			AND tenant_id    =  #{tenantId}
+			order by adtn_svc_seq 		
+	</select>	
+	
+	<insert id="SYSM110INS01" parameterType="SYSM100VO">
+			INSERT 
+			INTO t_tenant_info
+				( 
+				  tenant_id 
+				  ,dmn_cd
+				  ,SP_TYP_CD
+				  ,tenant_st_cd
+				  ,tenant_st_rsn_cd
+				  ,fmnm
+				  ,fmnm_eng
+				  ,repr_nm
+				  ,repr_nm_eng
+				  ,svc_typ_cd
+				  ,usr_ac_cnt
+				  ,eml_snd_grps_addr
+				  ,mling_cd 				
+				  ,org_lvl_cd
+				  ,svc_cont_dd
+				  ,svc_bltn_dd
+				  ,svc_expry_dd
+				  ,svc_trmn_dd
+				  ,reg_dtm
+				  ,regr_id
+				  ,regr_org_cd
+				  ,lst_corc_dtm
+				  ,lst_corpr_id
+				  ,lst_corpr_org_cd
+			    )
+			VALUES 
+				(
+				 #{tenantId}
+				  , #{dmnCd}
+				  , #{spTypCd}
+				  , #{tenantStCd} 
+				  , #{tenantStRsnCd}
+				  , #{fmnm} 
+				  , #{fmnmEng} 
+				  , #{reprNm} 
+				  , #{reprNmEng} 
+				  , #{svcTypCd}
+				  , #{usrAcCnt} 
+				  , #{emlSndGrpsAddr} 
+				  , #{mlingCd} 
+				  , #{orgLvlCd}
+				  , #{svcContDd} 
+				  , #{svcBltnDd} 
+				  , #{svcExpryDd} 
+				  , #{svcTrmnDd} 
+				  , CURRENT_TIMESTAMP
+				  , #{regrId} 
+				  , #{regrOrgCd} 
+				  , CURRENT_TIMESTAMP
+				  , #{lstCorprId} 
+				  , #{lstCorprOrgCd} 
+				)	
+	</insert>		
+	<insert id="SYSM110INS02" parameterType="SYSM110VO" >
+
+    	<selectKey keyProperty="adtnSvcSeq" resultType="int" order="BEFORE">
+	      SELECT COALESCE(MAX(adtn_svc_seq::NUMERIC)+1,1) from t_tenant_adtn_svc_info WHERE TENANT_ID = #{tenantId}
+	    </selectKey>
+			INSERT INTO t_tenant_adtn_svc_info
+					(
+					  tenant_id 
+				      ,adtn_svc_seq
+					  ,adtn_svc_cd
+					  ,conn_addr
+					  ,lcns_cunt
+					  ,use_dv_cd
+					  ,reg_dtm
+					  ,regr_id
+					  ,regr_org_cd
+					  ,lst_corc_dtm
+					  ,lst_corpr_id
+					  ,lst_corpr_org_cd
+					)
+			VALUES
+					(
+					  #{tenantId}
+					  ,#{adtnSvcSeq}
+					  , #{adtnSvcCd} 
+					  , #{connAddr}
+					  , #{lcnsCunt}
+					  , #{useDvCd}
+					  , CURRENT_TIMESTAMP
+					  , #{regrId} 
+					  , #{regrOrgCd} 
+					  , CURRENT_TIMESTAMP
+					  , #{lstCorprId} 
+					  , #{lstCorprOrgCd} 
+					)
+	</insert>
+
+	<update id="SYSM110UPT01"  parameterType="SYSM100VO">
+			UPDATE t_tenant_info
+			SET   dmn_cd    		=  #{dmnCd}
+			  	, SP_TYP_CD			= #{spTypCd}
+				, tenant_st_cd     	=  #{tenantStCd}
+				, tenant_st_rsn_cd  =  #{tenantStRsnCd}
+				, fmnm 				=  #{fmnm}
+				, fmnm_eng      	=  #{fmnmEng}
+				, repr_nm     		=  #{reprNm}
+				, repr_nm_eng		=  #{reprNmEng}
+				, svc_typ_cd		=  #{svcTypCd}
+				, usr_ac_cnt   		=  #{usrAcCnt}
+				, eml_snd_grps_addr	=  #{emlSndGrpsAddr}
+				, mling_cd 			=  #{mlingCd} 
+				, org_lvl_cd   		=  #{orgLvlCd}
+				, svc_cont_dd 		=  #{svcContDd}
+				, svc_bltn_dd 		=  #{svcBltnDd}
+				, svc_expry_dd  	=  #{svcExpryDd}
+				, svc_trmn_dd   	=  #{svcTrmnDd}
+				, lst_corc_dtm 	= CURRENT_TIMESTAMP
+				, lst_corpr_id   	=  #{lstCorprId}
+				, lst_corpr_org_cd  =  #{lstCorprOrgCd}
+  		    WHERE tenant_id    		=  #{tenantId}
+	</update>
+	
+	<update id="SYSM110UPT02" parameterType="java.util.List">
+  	 <foreach collection="list" item="item" separator=";">
+			UPDATE t_tenant_adtn_svc_info
+			SET adtn_svc_cd					=  #{item.adtnSvcCd}
+				, conn_addr					=  #{item.connAddr}
+				, use_dv_cd					=  #{item.useDvCd}
+			  	, lcns_cunt					=  #{item.lcnsCunt}
+				, lst_corc_dtm 				= CURRENT_TIMESTAMP
+				, lst_corpr_id   			=  #{item.lstCorprId}
+				, lst_corpr_org_cd  		=  #{item.lstCorprOrgCd}
+  		    WHERE tenant_id    		=  #{item.tenantId}
+  		    AND  adtn_svc_seq    	=  #{item.adtnSvcSeq}
+     </foreach>	    
+	</update>
+	
+	<delete id="SYSM110DEL01" parameterType="SYSM100VO">
+		DELETE FROM t_tenant_info
+		WHERE tenant_id   =  #{tenantId}
+	</delete>
+	
+	<delete id="SYSM110DEL02" parameterType="SYSM100VO">
+		DELETE FROM t_tenant_adtn_svc_info
+		WHERE tenant_id   =  #{tenantId}
+	</delete>
+	
+	<delete id="SYSM110DEL03" parameterType="java.util.List">
+  	 <foreach collection="list" item="item" separator=";">
+			DELETE FROM t_tenant_adtn_svc_info
+  		    WHERE tenant_id    		=  #{item.tenantId}
+  		    AND  adtn_svc_seq    	=  #{item.adtnSvcSeq}
+     </foreach>	    
+	</delete>
+
+	<update id="SYSM110UPT03"  parameterType="SYSM100VO">
+		UPDATE t_tenant_info
+		SET   dmn_cd    		=  #{dmnCd}
+		  , tenant_st_cd     	=  #{tenantStCd}
+		  , fmnm 				=  #{fmnm}
+		  , lst_corc_dtm 	= CURRENT_TIMESTAMP
+		  , lst_corpr_id   	=  #{lstCorprId}
+		  , lst_corpr_org_cd  =  #{lstCorprOrgCd}
+		WHERE tenant_id    		=  #{tenantId}
+	</update>
+
+	<update id="SYSM110UPT04"  parameterType="SYSM100VO">
+		UPDATE t_tenant_info
+		SET  usr_ac_cnt   		=  #{usrAcCnt}
+		  , svc_cont_dd 		=  #{svcContDd}
+		  , svc_bltn_dd 		=  #{svcBltnDd}
+		  , svc_expry_dd  	=  #{svcExpryDd}
+		  , svc_trmn_dd   	=  #{svcTrmnDd}
+		  , lst_corc_dtm 	= CURRENT_TIMESTAMP
+		  , lst_corpr_id   	=  #{lstCorprId}
+		  , lst_corpr_org_cd  =  #{lstCorprOrgCd}
+		WHERE tenant_id    		=  #{tenantId}
+	</update>
+
+	<update id="SYSM110UPT05" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE t_tenant_adtn_svc_info
+			SET adtn_svc_cd					=  #{item.adtnSvcCd}
+			, conn_addr					=  #{item.connAddr}
+			, use_dv_cd					=  #{item.useDvCd}
+			, lcns_cunt					=  #{item.lcnsCunt}
+			, lst_corc_dtm 				= CURRENT_TIMESTAMP
+			, lst_corpr_id   			=  #{item.lstCorprId}
+			, lst_corpr_org_cd  		=  #{item.lstCorprOrgCd}
+			WHERE tenant_id    		=  #{item.tenantId}
+			AND  adtn_svc_cd    	=   #{item.adtnSvcCd}
+		</foreach>
+	</update>
+
+
+	<select id="SYSM110SEL03" parameterType="SYSM110VO" resultType="SYSM110VO">
+		SELECT  ttasi.tenant_id			    AS tenantId
+		,ttasi.adtn_svc_seq			AS adtnSvcSeq
+		,ttasi.adtn_svc_seq			AS id
+		,ttasi.adtn_svc_cd			AS adtnSvcCd
+		,ttasi.use_dv_cd				AS useDvCd
+		,tcc.com_cd_nm 				AS adtnSvcNm
+		,COALESCE(ttasi.conn_addr,'')	AS connAddr
+		,COALESCE(ttasi.lcns_cunt,'') AS lcnsCunt
+		FROM t_tenant_adtn_svc_info ttasi,
+		t_com_cd tcc
+		WHERE 1=1
+		AND tcc.mgnt_item_cd = 'C0011'
+		AND ttasi.adtn_svc_cd = tcc.com_cd
+		AND tenant_id    =  #{tenantId}
+		<if test='adtnSvcCd != null and adtnSvcCd != ""'>
+			AND ttasi.adtn_svc_cd = #{adtnSvcCd}
+		</if>
+		order by adtn_svc_seq
+	</select>
+
+
+</mapper>
+

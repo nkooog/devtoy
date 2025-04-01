@@ -1,0 +1,115 @@
+ncrm:
+  version: 2024100801
+  newPw: ia1z4pXXQkElt0keiDmmBw==
+
+spring:
+  thymeleaf:
+    prefix: classpath:/templates
+    suffix: .html
+    view-names: /th/*
+    check-template-location: false
+
+  messages:
+    basename: message/message_ko
+    encoding: UTF-8
+    fallback-to-system-locale: true
+    always-use-message-format: true
+
+  datasource:
+    url: jdbc:log4jdbc:postgresql://192.168.199.11:5432/crmdb
+    username: appcrm
+    password: appcrm2302!
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    dbcp2:
+      connection-init-sqls: SET TIMEZONE TO 'Asia/Seoul'
+      test-on-borrow: true
+      validation-query: SELECT 1
+    tomcat:
+      max-active: 300
+      max-idle: 100
+      max-wait: 10000
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  web:
+    resources:
+      static-locations:
+        - file:/F:/share_resources/
+        - classpath:/static/
+      add-mappings: true
+
+eureka:
+  client:
+    enabled: false
+
+server:
+  servlet:
+    context-path: /bcs/crm
+
+
+g-properties-service:
+  properties:
+    BONA : "http://192.168.100.30/"
+    BONA2 : "ViD6tcJK4GB8dlm7h6xeMfjP5IExamBSqJ4Dpz9fwa8="
+    servicComm : "lSeZnOTBArsmXknLnb1VtktL8CPibJGhAuyHEpAbeYNGSZ3cjWSYLufNOCh8m5UC"
+    serviceCallBackUpdate : "CallbackWebAPI/callback/SetCallbackStateUpdateNCRM"
+    serviceCallBotList : "http://192.168.20.183:9500/CallbotHistory"
+    serviceInfoPush : "http://192.168.100.31:29001"
+    serviceInfoPushCreateToken : "/Message/CreateToken"
+    serviceInfoPushInvoke : "/Message/Invoke"
+
+properties-service:
+  properties:
+    Version: "2023081601"
+    pageUnit: "10"
+    pageSize: "10"
+    MaxFileSize: "104857600"
+    KLD: "C:/aicrm/crmapp/kld/"
+    KLD_IMG: "C:/aicrm/crmapp/kld_img/"
+    KLD_CNTS: "C:/aicrm/crmapp/kld_cnts/"
+    KLD_CNTS_TMP: "C:/aicrm/crmapp/kld_cnts_tmp/"
+    CMMT: "C:/aicrm/crmapp/cmmt/"
+    CMMT_IMG: "C:/aicrm/crmapp/cmmt_img/"
+    CMMT_CNTS: "C:/aicrm/crmapp/cmmt_cnts/"
+    CMMT_CNTS_TMP: "C:/aicrm/crmapp/cmmt_cnts_tmp/"
+    CMMT_NL_CNTS_TMP: "C:/aicrm/crmapp/cmmt_nl_cnts_tmp/"
+    POTO: "C:/aicrm/crmapp/poto/"
+    SCHD: "C:/aicrm/crmapp/schd/"
+    NOTE: "C:/aicrm/crmapp/note/"
+    EXL: "C:/aicrm/crmapp/exl/"
+    EML: "C:/aicrm/crmapp/eml/"
+    PSNZ: "C:/aicrm/crmapp/psnz/"
+    SYSM: "C:/aicrm/crmapp/sysm/"
+    DASH: "C:/aicrm/crmapp/dash/"
+    XLSX: "C:/upload/excel/"
+    FORM: "C:/aicrm/crmapp/form/"
+    DASH_IMG: "C:/aicrm/crmapp/dash_img/"
+    MMS_IMG: "C:/aicrm/crmapp/mms_img/"
+    MlingCd: "ko"
+    newPw: "ia1z4pXXQkElt0keiDmmBw=="
+    elkUrl: "MRvoN0+H27PB8B+y0IW8pGwezctGrGk4qkXKJEYBdsc="
+    elkId: "barhpnU0RVko0uFZ63hI3Q=="
+    elkPw: "EZJSps1MqNJ1BplZU3MlNQ=="
+    BONA :
+      sms :
+        url : "yarHtQO3Yt%2FrsuhL4ZW6hq1gbFM%2FCiUET8K%2BdRFXJ20%3D"
+    BONA2:
+      sms:
+        url: "SSSY3EDLQ+53u2tcOYjzz9MT5Tt9FfFs+qHczFPBuEo="
+
+
+comm-ocs-properties-service :
+  properties :
+    url: "http://172.30.100.31:11106/v1/api"
+    auth: "http://172.30.100.31:11106/v1/auth"
+    tenantId:
+      DRHID: "XYjSBt56wExEMCteP8061"
+      JDHID: "U2783jiICotZDzqthvSGA"
+      BMHID: "59kJHGCMEeqXa22ephkdl"
+      ELHID: "mNgIaYzHMzOEknfS469yA"
+    tenantSecret:
+      DRHSecret: "8GHMb8O5br6GTbaZRul7QaKwTkm0wtF6QyE2w0vi1"
+      JDHSecret: "M2XShIVnlQ4o97FSI0O0wEwroK1ohCmrShBJQDRhD"
+      BMHSecret: "9JvkH8waumMhzgTcRHamkvzkJL444Y3TDH0P3Bcxv"
+      ELHSecret: "9nXum0nvUDmLuRWljdtH7nNNvGI6DYDDvpINwT6lT"
+
