@@ -1,4 +1,4 @@
-package org.crm.config.security.jwt;
+package org.crm.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -6,13 +6,11 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.crm.config.redis.RedisService;
-import org.crm.config.security.auth.UserPrincipalDetail;
+import org.crm.lgin.VO.LGIN000VO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -49,19 +47,14 @@ public class JwtTokenProvider {
 		this.redisService = redisService;
 	}
 
-	public JwtToken generateToken(Authentication authentication) {
-		// 권한 가져오기
-		String authorities = authentication.getAuthorities().stream()
-				.map(GrantedAuthority::getAuthority)
-				.collect(Collectors.joining(","));
+	public JwtToken generateToken(LGIN000VO lgin000VO) {
 
 		// 테넌트명:사용자ID
-		UserPrincipalDetail detail = (UserPrincipalDetail) authentication.getPrincipal();
 		StringBuffer buffer = new StringBuffer();
 
-		buffer.append(detail.getUser().getTenantId());
+		buffer.append(lgin000VO.getTenantId());
 		buffer.append(SEPARATOR);
-		buffer.append(detail.getUser().getUsrId());
+		buffer.append(lgin000VO.getUsrId());
 
 		Date accessTokenExpiration = getTokenDate(10);
 		Date refreshTokenExpiration = getTokenDate(60);
@@ -70,7 +63,7 @@ public class JwtTokenProvider {
 		String accessToken = Jwts.builder()
 				.signWith(this.KEY)
 				.setSubject(buffer.toString())
-				.claim(this.header, authorities)
+				.claim(this.header, lgin000VO.getUsrGrd())
 				.setExpiration(accessTokenExpiration)
 				.compact();
 
@@ -114,7 +107,7 @@ public class JwtTokenProvider {
 	}
 
 
-	public HttpStatus isValidToken(Authentication authentication) {
+	public HttpStatus isValidToken(LGIN000VO lgin000VO) {
 
 		StringBuffer buffer = new StringBuffer();
 		JwtToken jwtToken = null;
@@ -122,11 +115,10 @@ public class JwtTokenProvider {
 		HttpStatus httpStatus = null;
 		String refresh = null;
 
-		if(authentication != null) {
-			UserPrincipalDetail detail = (UserPrincipalDetail) authentication.getPrincipal();
-			buffer.append(detail.getUser().getTenantId());
+		if(lgin000VO != null) {
+			buffer.append(lgin000VO.getTenantId());
 			buffer.append(SEPARATOR);
-			buffer.append(detail.getUser().getUsrId());
+			buffer.append(lgin000VO.getUsrId());
 
 			refresh = this.redisService.read(buffer.toString());
 		}

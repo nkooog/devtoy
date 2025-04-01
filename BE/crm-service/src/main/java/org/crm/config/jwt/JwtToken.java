@@ -1,4 +1,4 @@
-package org.crm.config.security.jwt;
+package org.crm.config.jwt;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;

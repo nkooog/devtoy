@@ -4,23 +4,26 @@ package org.crm.lgin.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.crm.lgin.VO.LGIN000VO;
 import org.crm.lgin.service.LGIN000Service;
+import org.crm.util.com.ComnFun;
+import org.crm.util.crypto.AES256Crypt;
+import org.crm.util.json.JsonUtil;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.Errors;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -68,6 +71,27 @@ public class LGIN000Controller {
 	@GetMapping("/LGIN000M")
 	public String login(HttpServletRequest request) {
 		return "/th/lgin/LGIN000M";
+	}
+
+	/**
+	 * @Method Name : LGIN000SEL01, LGIN000SEL02
+	 * @작성일      : 2022.02.04
+	 * @작성자      : sukim
+	 * @변경이력    :
+	 * @Method 설명 : 로그인 체크 및 로그인 사용자정보 조회
+	 * @param       :
+	 * @return      : 성공시 : 성공 상태, 성공 메시지
+	 *                실패시 : 실패 상태, 실패 메시지
+	 */
+	@PostMapping(value = "/LGIN000SEL01")
+	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000VO lgin000VO, BindingResult bindingResult){
+
+		if(bindingResult.hasErrors()) {
+
+		}
+
+
+		return null;
 	}
 
 	/**
