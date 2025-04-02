@@ -6,22 +6,17 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.crm.config.redis.RedisService;
-import org.crm.lgin.VO.LGIN000VO;
+import org.crm.lgin.model.vo.LGIN000VO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -31,9 +26,8 @@ public class JwtTokenProvider {
 	private final String SEPARATOR = ":";
 
 	private RedisService redisService;
-	private RedisTemplate redisTemplate;
 
-	@Value("${jwt.authHeader}")
+	@Value("${jwt.header}")
 	private String header;
 
 	@Value("${jwt.type}")
@@ -43,7 +37,6 @@ public class JwtTokenProvider {
 	public JwtTokenProvider(RedisTemplate redisTemplate, @Value("${jwt.secret}") String KEY, RedisService redisService ) {
 		byte[] keyBytes = Decoders.BASE64.decode(KEY);
 		this.KEY = Keys.hmacShaKeyFor(keyBytes);
-		this.redisTemplate = redisTemplate;
 		this.redisService = redisService;
 	}
 
@@ -97,13 +90,6 @@ public class JwtTokenProvider {
 							.build()
 							.parseClaimsJws(token)
 							.getBody();
-	}
-
-	public Collection<? extends GrantedAuthority> getClaimsAuthtication(Claims claims) {
-		return Arrays.stream(
-						claims.get(this.header).toString().split(","))
-				.map(SimpleGrantedAuthority::new)
-				.collect(Collectors.toList());
 	}
 
 
