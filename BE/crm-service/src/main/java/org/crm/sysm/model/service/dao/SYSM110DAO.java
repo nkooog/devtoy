@@ -1,15 +1,15 @@
-package org.crm.cmmt.service.dao;
+package org.crm.sysm.model.service.dao;
 
-import org.crm.comm.MapperTemplate;
 import org.apache.ibatis.session.SqlSession;
+import org.crm.comm.MapperTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository("CMMTCommDAO")
-public class CMMTCommDAO<T> extends MapperTemplate<T> {
+@Repository("SYSM110DAO")
+public class SYSM110DAO<T> extends MapperTemplate<T> {
 
-	public CMMTCommDAO(SqlSession session) {
+	public SYSM110DAO(SqlSession session) {
 		super(session);
 	}
 

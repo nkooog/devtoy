@@ -7,11 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.crm.lgin.VO.LGIN000VO;
+import org.crm.lgin.model.dto.LGIN000DTO;
+import org.crm.lgin.model.vo.LGIN000VO;
 import org.crm.lgin.service.LGIN000Service;
 import org.crm.util.com.ComnFun;
 import org.crm.util.crypto.AES256Crypt;
-import org.crm.util.json.JsonUtil;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +20,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
+import java.net.Inet4Address;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -84,11 +83,27 @@ public class LGIN000Controller {
 	 *                실패시 : 실패 상태, 실패 메시지
 	 */
 	@PostMapping(value = "/LGIN000SEL01")
-	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000VO lgin000VO, BindingResult bindingResult){
+	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale) throws Exception{
 
-		if(bindingResult.hasErrors()) {
+		lgin000DTO.setScrtNo(AES256Crypt.encrypt(lgin000DTO.getScrtNo()));
+		lgin000DTO.setIpAddr(Inet4Address.getLocalHost().getHostAddress());
+		lgin000DTO.setExtNoUseYn(lgin000DTO.getExtNo());
+		lgin000DTO.setBsVlMgntNo(4);
 
+		// 로그인검증용 사용자정보조회(화면에서 클릭 당시)
+		LGIN000VO userInfo = this.lgin000Service.LGIN000SEL07(lgin000DTO);
+
+		Integer status = this.loginCheck(lgin000DTO, userInfo, locale);
+
+		log.debug(" login status = {}", status);
+
+		if(status > 0) {
+
+		}else {
+			// TODO: 로그인 검증 처리 후 JWT 발급 추가
 		}
+
+
 
 
 		return null;
@@ -116,7 +131,7 @@ public class LGIN000Controller {
 			LGIN000VO vo = new LGIN000VO();
 			vo.setTenantId((String) jsonObject.get("tenantId"));
 
-			LGIN000VO mlingCd = lgin000Service.LGIN000SEL03(vo);
+			LGIN000VO mlingCd = this.lgin000Service.LGIN000SEL03(vo);
 
 			String rtnMsg =
 					(mlingCd != null) ? messageSource.getMessage("success.common.select", null, "success select", locale)
@@ -132,6 +147,65 @@ public class LGIN000Controller {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageSource.getMessage("LGIN000M.error.loginBlock", null, "server error", locale));
 		}
 		return ResponseEntity.ok().body(result);
+	}
+
+
+	public int loginCheck(LGIN000DTO lgin000DTO, LGIN000VO userInfo, Locale locale) throws Exception{
+
+		// 상태코드
+		int resultCode = 0;
+
+		if(userInfo != null && lgin000DTO.getScrtNo().equals(userInfo.getScrtNo())) {
+
+			if(Integer.parseInt(userInfo.getUsrGrd()) < 900) {
+
+				if(userInfo.isCheckPassWord()) {
+					// 패스워드 변경일 만료
+					resultCode = 4;
+				}else if(userInfo.getAcStCd().equals("3")) {
+					// 계정 만료 된 사용자
+					resultCode = 3;
+					if(userInfo.isCheckQualLossDd()) {
+						// 계정 사용기간 만료 사용자
+						userInfo.setAcStCd("3");      // 사용기간만료
+						userInfo.setAcStRsnCd("9");   // 계정잠김
+						this.lgin000Service.LGIN000UPT01(userInfo);
+					}
+				}else if(userInfo.getAcStCd().equals("2")) {
+					// 이미 오류횟수초과 계정이 잠긴 사용자
+					resultCode = 3;
+				}
+			}
+
+			userInfo.setSysLogMsg(this.messageSource.getMessage("LGIN000M.button.btnLogin", null, "LGIN000M.btnLogin", locale));
+
+			//사용자정보변경, 로그인이력생성
+			this.lgin000Service.LGIN000UPT02(userInfo);
+			userInfo.setSysLogDvCd("1000");
+			userInfo.setSysLogMsg(this.messageSource.getMessage("LGIN000M.login", null, "LGIN000M.login", locale));
+			this.lgin000Service.LGIN000INS01(userInfo);
+
+		}else{
+			//로그인 실패
+			resultCode = 1;
+
+			if(userInfo.isCheckPwErrTcnt()) {
+				this.lgin000Service.LGIN000UPT04(userInfo);
+				if(userInfo.getPwErrTcnt() >= userInfo.getBscPwErrTcnt() - 1) {
+					userInfo.setAcStCd("2");      //계정잠김
+					userInfo.setAcStRsnCd("3");   //비밀번호초과
+					lgin000Service.LGIN000UPT01(userInfo); //계정잠김처리
+					resultCode = 2;
+				}
+
+			}else{
+				// 5회 초과 계정잠금
+				resultCode = 2;
+			}
+		}
+
+		return resultCode;
+
 	}
 
 }

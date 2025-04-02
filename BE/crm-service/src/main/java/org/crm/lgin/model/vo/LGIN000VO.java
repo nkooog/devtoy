@@ -1,5 +1,6 @@
-package org.crm.lgin.VO;
+package org.crm.lgin.model.vo;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.crm.comm.VO.COMM000VO;
@@ -102,5 +103,10 @@ public class LGIN000VO extends COMM000VO {
 	private String mbph_no;		// 휴대폰 번호
 	
 	private String lstLginScrtNo;
+	private Integer bscPwErrTcnt;
+
+	private boolean checkPassWord;
+	private boolean checkQualLossDd;
+	private boolean checkPwErrTcnt;
 
 }

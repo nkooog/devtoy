@@ -1,4 +1,4 @@
-package org.crm.lgin.VO;
+package org.crm.lgin.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

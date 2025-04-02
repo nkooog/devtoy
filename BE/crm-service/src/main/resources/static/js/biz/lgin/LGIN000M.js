@@ -24,7 +24,7 @@ var loginBlock = false;
 $(document).ready(function(){
 
 	// 검색 입력창 엔터처리
-	document.querySelector("form[name='LGIN000M']").addEventListener('keypress', fn_EnterKeyPress);
+	document.querySelector("form[name='sendForm']").addEventListener('keypress', fn_EnterKeyPress);
 
 	//IE browser 제한
 	if(!checkBrowser()){
@@ -98,24 +98,46 @@ fn_EnterKeyPress = (e) => {
 }
 
 function fn_formSubmit(){
-	let form = document.getElementById("LGIN000M");
+	let sendForm = $("form[name='sendForm']");
 
-	if(uf_Validation()) {
-		$.ajax({
-			url: form.action,
-			type:'POST',
-			data :$("#LGIN000M").serialize(),
-			success : function(response) {
-				Utils.alert(response.message, function() {
-					popupMain();
-				});
-			},
-			error :function(response, status, error){
-				Utils.alert(response.responseJSON.message, null);
-			},
-		});
-	}
+	this.LGIN000_fnchkCookie();
+
+	$.ajax({
+		contentType: 'application/json; charset=UTF-8',
+		dataType: "json",
+		url: sendForm.attr('action'),
+		type:'POST',
+		data :JSON.stringify(sendForm.serializeObject()),
+		success : function(response) {
+			if(response.status !== 200) {
+				Utils.alert(response.message, null);
+			}else{
+				popupMain();
+			}
+		},
+		error :function(response, status, error){
+			Utils.alert(response.responseJSON.message, null);
+		},
+	});
 }
+
+
+$.fn.serializeObject = function(){
+	var obj = {};
+	var arr = this.serializeArray();
+	arr.forEach(function(data){
+		// 동일한 이름의 필드가 있을 경우 배열로 저장
+		if (obj[data.name]) {
+			if (!Array.isArray(obj[data.name])) {
+				obj[data.name] = [obj[data.name]];
+			}
+			obj[data.name].push(data.value);
+		} else {
+			obj[data.name] = data.value;
+		}
+	});
+	return obj;
+};
 
 function LGIN000_fnXboxInstallCheck(){
 	//TODO: xbox 웹소켓 URL 변경될경우 변경 (통신대기시간 3초 timeout 시간변경)
@@ -208,11 +230,7 @@ function LGIN000_fngetCookie(){
 	$("#usrId").val(getCookie("aicrm.usrId"));
 	$("#extNoUseYn").val(getCookie("aicrm.extNoUseYn"));
 
-	if($("#extNoUseYn").val() === "N"){
-		$("#NoExtNo").prop("checked",true);
-	}else{
-		$("#NoExtNo").prop("checked",false);
-	}
+	document.querySelector("#NoExtNo").checked = document.querySelector("#extNoUseYn").value === 'N' ? true : false;
 
 	if($("#tenantId").val() == "" || $("#usrId").val() == ""){
 		$("#IdSave").attr("checked", false);
@@ -224,7 +242,7 @@ function LGIN000_fngetCookie(){
 }
 
 function fn_chkIdSave(e){
-	if(event.target.checked)  {
+	if(e.target.checked)  {
 		$("#IdSaveYn").val("Y");
 	}else{
 		$("#IdSaveYn").val("N");
@@ -232,7 +250,7 @@ function fn_chkIdSave(e){
 }
 
 function fn_chkNoExtNo(e){
-	if(event.target.checked)  { //사용안함
+	if(e.target.checked)  { //사용안함
 		$("#extNoUseYn").val("N");
 	}else{
 		$("#extNoUseYn").val("Y");
