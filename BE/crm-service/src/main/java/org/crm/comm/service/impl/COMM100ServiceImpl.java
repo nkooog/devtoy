@@ -3,7 +3,7 @@ package org.crm.comm.service.impl;
 import org.crm.comm.VO.COMM100VO;
 import org.crm.comm.service.COMM100Service;
 import org.crm.comm.service.dao.COMMCommDAO;
-import org.crm.lgin.VO.LGIN010VO;
+import org.crm.lgin.model.vo.LGIN010VO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
