@@ -7,6 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.crm.config.redis.RedisService;
 import org.crm.lgin.model.vo.LGIN000VO;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -40,7 +42,7 @@ public class JwtTokenProvider {
 		this.redisService = redisService;
 	}
 
-	public JwtToken generateToken(LGIN000VO lgin000VO) {
+	public JwtToken generateToken(LGIN000VO lgin000VO) throws Exception{
 
 		// 테넌트명:사용자ID
 		StringBuffer buffer = new StringBuffer();
@@ -66,10 +68,11 @@ public class JwtTokenProvider {
 				.setExpiration(refreshTokenExpiration)
 				.compact();
 
-		String refreshKey = buffer.toString();
+		String redisKey = buffer.toString();
 
 		JwtToken jwtToken = JwtToken.builder()
-				.refreshKey(refreshKey)
+				.tokenKey(redisKey)
+				.accessToken(accessToken)
 				.refreshToken(refreshToken)
 				.build();
 
@@ -84,38 +87,50 @@ public class JwtTokenProvider {
 				.build();
 	}
 
-	public Claims parseClaims(String token) {
+	public Claims parseClaims(String token) throws Exception{
+
+		JSONParser parser = new JSONParser();
+		JSONObject obj = (JSONObject) parser.parse(token);
+
 		return Jwts.parserBuilder()
 							.setSigningKey(this.KEY)
 							.build()
-							.parseClaimsJws(token)
+							.parseClaimsJws((String) obj.get("accessToken"))
 							.getBody();
 	}
 
 
-	public HttpStatus isValidToken(LGIN000VO lgin000VO) {
+	public JSONObject isValidToken(LGIN000VO lgin000VO) throws Exception{
 
 		StringBuffer buffer = new StringBuffer();
-		JwtToken jwtToken = null;
+		JSONObject jsonObj = new JSONObject();
 		Claims claims = null;
-		HttpStatus httpStatus = null;
-		String refresh = null;
+		String auth = null;
 
 		if(lgin000VO != null) {
 			buffer.append(lgin000VO.getTenantId());
 			buffer.append(SEPARATOR);
 			buffer.append(lgin000VO.getUsrId());
 
-			refresh = this.redisService.read(buffer.toString());
+			auth = this.redisService.read(buffer.toString());
 		}
 
-		if(refresh != null) {
-			claims = this.parseClaims(refresh);
+		log.debug("auth > {}", auth);
+
+		if(auth != null) {
+			claims = this.parseClaims(auth);
+
+			// TODO: claims Expiration 검증 추가
+
 			if(claims != null) {
-				httpStatus = HttpStatus.OK;
+
+				log.debug( " Expiration -> {}" , claims.getExpiration());
+				jsonObj.put("status", HttpStatus.OK);
+				jsonObj.put("claims", claims);
 			}
 		}else{
-			httpStatus = HttpStatus.CREATED;
+			jsonObj.put("status", HttpStatus.CREATED);
+			jsonObj.put("claims", claims);
 		}
 
 		return httpStatus;

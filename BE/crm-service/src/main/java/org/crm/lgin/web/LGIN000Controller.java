@@ -2,15 +2,17 @@ package org.crm.lgin.web;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.crm.config.jwt.JwtToken;
+import org.crm.config.jwt.JwtTokenProvider;
+import org.crm.config.redis.RedisService;
 import org.crm.lgin.model.dto.LGIN000DTO;
 import org.crm.lgin.model.vo.LGIN000VO;
 import org.crm.lgin.service.LGIN000Service;
-import org.crm.util.com.ComnFun;
 import org.crm.util.crypto.AES256Crypt;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.Inet4Address;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -47,15 +50,17 @@ public class LGIN000Controller {
 	@Resource(name = "LGIN000Service")
 	private LGIN000Service lgin000Service;
 
+	private JwtTokenProvider provider;
 	private MessageSource messageSource;
 	private ObjectMapper objectMapper;
-	private RedisTemplate redisTemplate;
+	private RedisService redisService;
 
 	@Autowired
-	public LGIN000Controller(MessageSource messageSource, ObjectMapper objectMapper, RedisTemplate redisTemplate) {
+	public LGIN000Controller(MessageSource messageSource, ObjectMapper objectMapper, RedisService redisService, JwtTokenProvider provider) {
 		this.messageSource = messageSource;
 		this.objectMapper = objectMapper;
-		this.redisTemplate = redisTemplate;
+		this.redisService = redisService;
+		this.provider = provider;
 	}
 
 	/**
@@ -83,7 +88,12 @@ public class LGIN000Controller {
 	 *                실패시 : 실패 상태, 실패 메시지
 	 */
 	@PostMapping(value = "/LGIN000SEL01")
-	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale) throws Exception{
+	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale) throws Exception {
+
+		HttpStatus resultStatus = null;
+
+		JSONObject json = new JSONObject();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		lgin000DTO.setScrtNo(AES256Crypt.encrypt(lgin000DTO.getScrtNo()));
 		lgin000DTO.setIpAddr(Inet4Address.getLocalHost().getHostAddress());
@@ -97,16 +107,24 @@ public class LGIN000Controller {
 
 		log.debug(" login status = {}", status);
 
-		if(status > 0) {
+		if (status > 0) {
 
-		}else {
+		} else {
+
 			// TODO: 로그인 검증 처리 후 JWT 발급 추가
+			JSONObject jsonObj = this.provider.isValidToken(userInfo);
+
+			if(jsonObj.get("status") == HttpStatus.OK) {
+				Claims claims = (Claims) jsonObj.get("claims");
+				
+				// TODO: 만료시 refresh 토큰으로 accesstoken 재발급, refresh 토큰까지 만료시 jwt토큰 재발급
+
+			}
+
+
 		}
 
-
-
-
-		return null;
+		return ResponseEntity.status(resultStatus).body(this.objectMapper.writeValueAsString(json));
 	}
 
 	/**
