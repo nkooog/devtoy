@@ -29,19 +29,19 @@ public class RedisService {
 		jsonObj.put("refreshToken", jwtToken.getRefreshToken());
 
 		this.redisTemplate.opsForValue().set(jwtToken.getTokenKey(), this.objectMapper.writeValueAsString(jsonObj));
-		this.redisTemplate.expire(jwtToken.getRefreshToken(), timeout, TimeUnit.SECONDS);
+		this.redisTemplate.expire(jwtToken.getTokenKey(), timeout, TimeUnit.DAYS);
 	}
 
 	public String read(String key) {
 		return (String) this.redisTemplate.opsForValue().get(key);
 	}
 
-	private void update(JwtToken jwtToken, long timeout) throws JsonProcessingException {
-		this.create(jwtToken, timeout);
+	public void update(JwtToken jwtToken, long timeout) throws JsonProcessingException {
+		this.update(jwtToken, timeout);
 	}
 
-	private void delete(String key) {
-		this.redisTemplate.delete(key);
+	public boolean delete(String key) {
+		return this.redisTemplate.delete(key);
 	}
 
 }
