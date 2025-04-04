@@ -2,11 +2,11 @@ package org.crm.lgin.web;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.crm.comm.VO.CommResponse;
 import org.crm.config.jwt.JwtToken;
 import org.crm.config.jwt.JwtTokenProvider;
 import org.crm.config.redis.RedisService;
@@ -17,15 +17,14 @@ import org.crm.util.crypto.AES256Crypt;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.Inet4Address;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -45,7 +44,8 @@ import java.util.Locale;
 @RequestMapping("/lgin/*")
 public class LGIN000Controller {
 
-	private final String SEPARATOR = ":";
+	@Value("${ncrm.separator}")
+	private String SEPARATOR;
 
 	@Resource(name = "LGIN000Service")
 	private LGIN000Service lgin000Service;
@@ -90,10 +90,8 @@ public class LGIN000Controller {
 	@PostMapping(value = "/LGIN000SEL01")
 	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale) throws Exception {
 
-		HttpStatus resultStatus = null;
-
+		CommResponse commResponse = null;
 		JSONObject json = new JSONObject();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		lgin000DTO.setScrtNo(AES256Crypt.encrypt(lgin000DTO.getScrtNo()));
 		lgin000DTO.setIpAddr(Inet4Address.getLocalHost().getHostAddress());
@@ -111,20 +109,25 @@ public class LGIN000Controller {
 
 		} else {
 
-			// TODO: 로그인 검증 처리 후 JWT 발급 추가
-			JSONObject jsonObj = this.provider.isValidToken(userInfo);
+			StringBuffer buffer = new StringBuffer();
+			buffer.append(userInfo.getTenantId());
+			buffer.append(this.SEPARATOR);
+			buffer.append(userInfo.getUsrId());
 
-			if(jsonObj.get("status") == HttpStatus.OK) {
-				Claims claims = (Claims) jsonObj.get("claims");
-				
-				// TODO: 만료시 refresh 토큰으로 accesstoken 재발급, refresh 토큰까지 만료시 jwt토큰 재발급
-
+			if(this.redisService.read(buffer.toString()) != null) {
+				this.redisService.delete(buffer.toString());
 			}
 
-
+			JwtToken jwtToken = this.provider.generateToken(userInfo);
+			
+			commResponse = CommResponse.builder()
+					.result(jwtToken)
+					.status(HttpStatus.CREATED.value())
+					.message("로그인 성공")
+					.build();
 		}
 
-		return ResponseEntity.status(resultStatus).body(this.objectMapper.writeValueAsString(json));
+		return ResponseEntity.status(commResponse.getStatus()).body(commResponse);
 	}
 
 	/**
