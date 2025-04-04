@@ -1,6 +1,7 @@
 package org.crm.config.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -23,11 +25,13 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtTokenProvider {
-
 	private final SecretKey KEY;
 	private final String SEPARATOR = ":";
 
 	private RedisService redisService;
+
+	private Date accessTokenExpiration = getTokenDate(1);
+	private Date refreshTokenExpiration = getTokenDate(60);
 
 	@Value("${jwt.header}")
 	private String header;
@@ -44,31 +48,12 @@ public class JwtTokenProvider {
 
 	public JwtToken generateToken(LGIN000VO lgin000VO) throws Exception{
 
-		// 테넌트명:사용자ID
-		StringBuffer buffer = new StringBuffer();
-
-		buffer.append(lgin000VO.getTenantId());
-		buffer.append(SEPARATOR);
-		buffer.append(lgin000VO.getUsrId());
-
-		Date accessTokenExpiration = getTokenDate(10);
-		Date refreshTokenExpiration = getTokenDate(60);
-
 		// Access Token 생성
-		String accessToken = Jwts.builder()
-				.signWith(this.KEY)
-				.setSubject(buffer.toString())
-				.claim(this.header, lgin000VO.getUsrGrd())
-				.setExpiration(accessTokenExpiration)
-				.compact();
-
+		String accessToken = generateAccessToken(lgin000VO);
 		// Refresh Token 생성
-		String refreshToken = Jwts.builder()
-				.signWith(this.KEY)
-				.setExpiration(refreshTokenExpiration)
-				.compact();
+		String refreshToken = generateRefreshToken();
 
-		String redisKey = buffer.toString();
+		String redisKey = lgin000VO.getTenantId() + ":" + lgin000VO.getUsrId();
 
 		JwtToken jwtToken = JwtToken.builder()
 				.tokenKey(redisKey)
@@ -76,7 +61,7 @@ public class JwtTokenProvider {
 				.refreshToken(refreshToken)
 				.build();
 
-		this.redisService.create(jwtToken, 20);
+		this.redisService.create(jwtToken, 1);
 
 		return JwtToken.builder()
 				.grantType(this.type.trim())
@@ -87,16 +72,24 @@ public class JwtTokenProvider {
 				.build();
 	}
 
-	public Claims parseClaims(String token) throws Exception{
+	public Claims parseClaims(String accessToken) throws Exception{
 
 		JSONParser parser = new JSONParser();
-		JSONObject obj = (JSONObject) parser.parse(token);
+		JSONObject jsonObj = (JSONObject) parser.parse(accessToken);
 
-		return Jwts.parserBuilder()
-							.setSigningKey(this.KEY)
-							.build()
-							.parseClaimsJws((String) obj.get("accessToken"))
-							.getBody();
+		try {
+			// 토큰 파싱
+			return Jwts.parserBuilder()
+					.setSigningKey(KEY)
+					.build()
+					.parseClaimsJws(jsonObj.get("accessToken").toString())
+					.getBody();
+		} catch (ExpiredJwtException e) {
+			throw e;
+		} catch (Exception e) {
+			// 기타 예외 처리
+			throw new RuntimeException("토큰 파싱 오류", e);
+		}
 	}
 
 
@@ -104,41 +97,61 @@ public class JwtTokenProvider {
 
 		StringBuffer buffer = new StringBuffer();
 		JSONObject jsonObj = new JSONObject();
-		Claims claims = null;
 		String auth = null;
 
-		if(lgin000VO != null) {
-			buffer.append(lgin000VO.getTenantId());
-			buffer.append(SEPARATOR);
-			buffer.append(lgin000VO.getUsrId());
+		try {
 
-			auth = this.redisService.read(buffer.toString());
-		}
+			if(lgin000VO != null) {
+				buffer.append(lgin000VO.getTenantId());
+				buffer.append(SEPARATOR);
+				buffer.append(lgin000VO.getUsrId());
 
-		log.debug("auth > {}", auth);
-
-		if(auth != null) {
-			claims = this.parseClaims(auth);
-
-			// TODO: claims Expiration 검증 추가
-
-			if(claims != null) {
-
-				log.debug( " Expiration -> {}" , claims.getExpiration());
-				jsonObj.put("status", HttpStatus.OK);
-				jsonObj.put("claims", claims);
+				auth = this.redisService.read(buffer.toString());
 			}
-		}else{
-			jsonObj.put("status", HttpStatus.CREATED);
-			jsonObj.put("claims", claims);
+
+			if(auth != null) {
+				Claims claims = this.parseClaims(auth);
+				jsonObj.put("status", HttpStatus.OK);
+				jsonObj.put("auth", auth);
+			}else{
+				jsonObj.put("status", HttpStatus.CREATED);
+				jsonObj.put("auth", this.generateToken(lgin000VO));
+			}
+
+		}catch (ExpiredJwtException e) {
+			jsonObj.put("status", HttpStatus.UNAUTHORIZED);
+			jsonObj.put("auth", auth);
 		}
 
-		return httpStatus;
+		return jsonObj;
 	}
 
 	// LocalDateTime To Date
 	public Date getTokenDate(Integer minutes) {
-		return java.sql.Timestamp.valueOf(LocalDateTime.now().plusMinutes(minutes).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+		return Timestamp.valueOf(LocalDateTime.now().plusMinutes(minutes).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+	}
+
+	public String generateAccessToken (LGIN000VO lgin000VO) throws Exception {
+		StringBuffer subject = new StringBuffer();
+
+		subject.append(lgin000VO.getTenantId());
+		subject.append(SEPARATOR);
+		subject.append(lgin000VO.getUsrId());
+
+		// Access Token 생성
+		return Jwts.builder()
+				.signWith(this.KEY)
+				.setSubject(subject.toString())
+				.claim(this.header, lgin000VO.getUsrGrd())
+				.setExpiration(accessTokenExpiration)
+				.compact();
+	}
+
+	public String generateRefreshToken () throws Exception {
+		return Jwts.builder()
+				.signWith(this.KEY)
+				.setExpiration(refreshTokenExpiration)
+				.compact();
 	}
 
 }
