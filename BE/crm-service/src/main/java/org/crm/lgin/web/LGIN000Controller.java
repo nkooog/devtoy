@@ -3,7 +3,9 @@ package org.crm.lgin.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.crm.comm.VO.CommResponse;
@@ -77,6 +79,11 @@ public class LGIN000Controller {
 		return "/th/lgin/LGIN000M";
 	}
 
+	@PostMapping("/test")
+	public ResponseEntity test() {
+		return ResponseEntity.ok("test");
+	}
+
 	/**
 	 * @Method Name : LGIN000SEL01, LGIN000SEL02
 	 * @작성일      : 2022.02.04
@@ -88,7 +95,7 @@ public class LGIN000Controller {
 	 *                실패시 : 실패 상태, 실패 메시지
 	 */
 	@PostMapping(value = "/LGIN000SEL01")
-	public ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale) throws Exception {
+	public @ResponseBody ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale, HttpServletResponse response) throws Exception {
 
 		CommResponse commResponse = null;
 		JSONObject json = new JSONObject();
@@ -126,6 +133,15 @@ public class LGIN000Controller {
 					.message("로그인 성공")
 					.build();
 		}
+
+		// JWT 토큰을 HttpOnly 쿠키로 설정
+		Cookie cookie = new Cookie("Authorization", "Bearer test");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(false);
+		cookie.setPath("/");
+		cookie.setMaxAge(60 * 60 * 24);  // 만료 시간 (1일)
+
+		response.addCookie(cookie);  // 응답에 쿠키 추가
 
 		return ResponseEntity.status(commResponse.getStatus()).body(commResponse);
 	}
