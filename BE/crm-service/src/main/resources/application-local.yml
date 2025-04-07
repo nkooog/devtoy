@@ -123,10 +123,3 @@ comm-ocs-properties-service :
       JDHSecret: "M2XShIVnlQ4o97FSI0O0wEwroK1ohCmrShBJQDRhD"
       BMHSecret: "9JvkH8waumMhzgTcRHamkvzkJL444Y3TDH0P3Bcxv"
       ELHSecret: "9nXum0nvUDmLuRWljdtH7nNNvGI6DYDDvpINwT6lT"
-
-
-
-logging:
-  level:
-    org.springframework.data.redis: DEBUG
-    redis.clients.jedis: DEBUG

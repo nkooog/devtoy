@@ -1,6 +1,7 @@
 ncrm:
   version: 2024100801
   newPw: ia1z4pXXQkElt0keiDmmBw==
+  separator : ":"
 
 jwt:
   secret: 7696df8573fd07575d6debf0c10c51719d64c9402e43da5665f2dc3868107762
@@ -8,10 +9,9 @@ jwt:
   type: Bearer
 
 spring:
-
   data:
     redis:
-      host: 127.0.0.1
+      host: redis-service
       port: 45020
 
   thymeleaf:

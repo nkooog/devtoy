@@ -3,6 +3,19 @@ spring:
     name: gw-service
   cloud:
     gateway:
+      paths-to-exclude:
+        - "/bcs/crm/index"
+        - "/bcs/crm/lgin/"
+        - "/bcs/crm/js/"
+        - "/bcs/crm/css/"
+        - "/bcs/crm/images/"
+        - "/bcs/crm/libs/"
+      default-filters:
+        - name : GlobalFilter
+          args :
+            baseMessage : Spring Cloud Gateway Global Filter
+            preLogger  : true
+            postLogger : true
       globalcors:
         cors-configurations:
           '[/**]' :
@@ -26,10 +39,12 @@ spring:
             - Path=/elh/**
 
 
+
 logging:
   level:
     org.springframework.web: DEBUG           # Spring Web의 HTTP 요청과 응답 로그
     org.springframework.cloud.gateway: DEBUG # Spring Cloud Gateway의 요청과 응답 로그
+    org.gateway : DEBUG
 
 server:
   port: 45000
