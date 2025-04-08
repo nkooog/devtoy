@@ -27,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.Inet4Address;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -95,7 +96,9 @@ public class LGIN000Controller {
 	 *                실패시 : 실패 상태, 실패 메시지
 	 */
 	@PostMapping(value = "/LGIN000SEL01")
-	public @ResponseBody ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale, HttpServletResponse response) throws Exception {
+	public @ResponseBody ResponseEntity LGIN000SEL01(@RequestBody @Valid LGIN000DTO lgin000DTO, Locale locale
+			, HttpServletRequest request
+			, HttpServletResponse response) throws Exception {
 
 		CommResponse commResponse = null;
 		JSONObject json = new JSONObject();
@@ -134,8 +137,12 @@ public class LGIN000Controller {
 					.build();
 		}
 
+		JSONObject obj = this.objectMapper.convertValue(commResponse.getResult(), JSONObject.class);
+
+		log.debug(" accessToken {}",obj.get("accessToken"));
+
 		// JWT 토큰을 HttpOnly 쿠키로 설정
-		Cookie cookie = new Cookie("Authorization", "Bearer test");
+		Cookie cookie = new Cookie("Authorization", URLEncoder.encode("Bearer " + obj.get("accessToken")));
 		cookie.setHttpOnly(true);
 		cookie.setSecure(false);
 		cookie.setPath("/");
@@ -171,8 +178,8 @@ public class LGIN000Controller {
 			LGIN000VO mlingCd = this.lgin000Service.LGIN000SEL03(vo);
 
 			String rtnMsg =
-					(mlingCd != null) ? messageSource.getMessage("success.common.select", null, "success select", locale)
-							: messageSource.getMessage("LGIN000M.error.tenantId", null, "error tenantId", locale);
+					(mlingCd != null) ? this.messageSource.getMessage("success.common.select", null, "success select", locale)
+							: this.messageSource.getMessage("LGIN000M.error.tenantId", null, "error tenantId", locale);
 
 			LGIN000SEL03_hashMap.put("result", this.objectMapper.writeValueAsString(mlingCd));
 			LGIN000SEL03_hashMap.put("msg"   , rtnMsg);
