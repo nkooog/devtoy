@@ -13,4 +13,9 @@ public class MainController {
 		return "/th/main";
 	}
 
+	@GetMapping("/auth")
+	public String logout() throws Exception {
+		return "/th/lgin/logout";
+	}
+
 }
