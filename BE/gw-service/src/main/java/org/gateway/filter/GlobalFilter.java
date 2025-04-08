@@ -14,8 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.List;
 
 @Component
@@ -38,31 +41,22 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 			ServerHttpResponse response = exchange.getResponse();
 			log.debug("Global Filter baseMessage: -> {}", config.getBaseMessage());
 
-			log.debug("request URL {}", request.getURI().getPath());
-			log.debug("request header {}",request.getHeaders());
-
 			// 인증을 건너뛰어야 할 경로를 체크 (예: /bcs/crm/lgin/** 등)
 			if (isPathExcluded(request.getURI().getPath())) {
 				log.debug("Skipping authentication for path: {}", request.getURI().getPath());
 			} else {
 				// 인증이 필요한 요청인데 Authorization 헤더가 없을 경우
-				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-					log.debug("Authorization header is missing. Returning 401 Unauthorized.");
+				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
+					&& !exchange.getRequest().getCookies().containsKey(HttpHeaders.AUTHORIZATION)) {
 
-					// 401 Unauthorized 응답을 CRM-Service로 전달
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);
-					response.getHeaders().set(HttpHeaders.CONTENT_TYPE, "application/json");
-
-					JSONObject json = new JSONObject();
-					json.put("status", response.getStatusCode());
-					json.put("message", "인증헤더 누락.");
-
-					// 오류 메시지를 CRM-Service로 넘기고, CRM-Service의 응답을 클라이언트로 반환
-					try {
-						return response.writeWith(Mono.just(response.bufferFactory().wrap(this.objectMapper.writeValueAsBytes(json))));
-					} catch (JsonProcessingException e) {
-						throw new RuntimeException(e);
+					if (!exchange.getRequest().getURI().getPath().equals("/bcs/crm/auth")) {
+						URI redirectUri = UriComponentsBuilder.fromUriString("/bcs/crm/auth")
+								.build().toUri();
+						exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+						exchange.getResponse().getHeaders().setLocation(redirectUri);
+						return exchange.getResponse().setComplete();
 					}
+
 				}
 			}
 
