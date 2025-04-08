@@ -4,12 +4,13 @@ spring:
   cloud:
     gateway:
       paths-to-exclude:
-        - "/bcs/crm/index"
-        - "/bcs/crm/lgin/"
-        - "/bcs/crm/js/"
-        - "/bcs/crm/css/"
-        - "/bcs/crm/images/"
-        - "/bcs/crm/libs/"
+        - ${ROOT_PATH}/index
+        - ${ROOT_PATH}/lgin
+        - ${ROOT_PATH}/js
+        - ${ROOT_PATH}/css
+        - ${ROOT_PATH}/images
+        - ${ROOT_PATH}/libs
+        - ${ROOT_PATH}/auth
       default-filters:
         - name : GlobalFilter
           args :
@@ -32,7 +33,7 @@ spring:
         - id : crm-service
           uri: lb://crm-service
           predicates:
-            - Path=/bcs/crm/**, /bcs/css/**, /bcs/images/**
+            - Path=${ROOT_PATH}/*, ${ROOT_PATH}/**, ${ROOT_PATH}/**
         - id: elh-service
           uri: lb://elh-service
           predicates:
@@ -58,3 +59,6 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
+
+ncrm:
+  redirect: ${ROOT_PATH}/auth
