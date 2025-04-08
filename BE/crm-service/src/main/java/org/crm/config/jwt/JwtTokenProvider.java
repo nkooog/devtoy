@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -142,6 +143,7 @@ public class JwtTokenProvider {
 		return Jwts.builder()
 				.signWith(this.KEY)
 				.setSubject(subject.toString())
+				.setId(UUID.randomUUID().toString())
 				.claim(this.header, lgin000VO.getUsrGrd())
 				.setExpiration(accessTokenExpiration)
 				.compact();
@@ -150,6 +152,7 @@ public class JwtTokenProvider {
 	public String generateRefreshToken () throws Exception {
 		return Jwts.builder()
 				.signWith(this.KEY)
+				.setId(UUID.randomUUID().toString())
 				.setExpiration(refreshTokenExpiration)
 				.compact();
 	}
