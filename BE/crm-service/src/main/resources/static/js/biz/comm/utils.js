@@ -56,20 +56,12 @@ var Utils = (function () {
                     }
                 },
                 error: function (request, status, error) {
-                    if(request.status === 401) {
-                        Utils.alert("세션 중복 로그인", ()=> {
-                            Utils.closeAllPopup();
-                            if (window.opener) {
-                                window.opener.location.href=GLOBAL.contextPath + "/lgin/login";
-                            }
-                            window.location.href=GLOBAL.contextPath + '/lgin/login'
-                        });
-                    }
-
                     // ajaxList.pop(url);
                     if (typeof errorFn === "function") {
                         errorFn(request);
                     }
+                    console.log(typeof request.responseText);
+                    Utils.alert(JSON.parse(request.responseText).message);
                     console.log("[error]");
                     console.log("code:" + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
                 },
@@ -110,16 +102,6 @@ var Utils = (function () {
                     }
                 },
                 error: function (request, status, error) {
-                    if(request.status === 401) {
-                        Utils.alert("세션 중복 로그인", ()=> {
-                            Utils.closeAllPopup();
-                            if (window.opener) {
-                                window.opener.location.href=GLOBAL.contextPath + "/lgin/login";
-                            }
-                            window.location.href=GLOBAL.contextPath + '/lgin/login'
-                        });
-                    }
-
                     if (typeof errorFn === "function") {
                         errorFn();
                     }
@@ -916,15 +898,6 @@ var Utils = (function () {
                     kendoPopInstances.push(kendoWindow);
                 },
                 error: function (request, status, error) {
-                    if(request.status === 401) {
-                        Utils.alert("세션 중복 로그인", ()=> {
-                            Utils.closeAllPopup();
-                            if (window.opener) {
-                                window.opener.location.href=GLOBAL.contextPath + "/lgin/login";
-                            }
-                            window.location.href=GLOBAL.contextPath + '/lgin/login'
-                        });
-                    }
                 }
             });
             return kendoWindow;
