@@ -1,0 +1,22 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<section class="mainContainer" th:fragment="fragment_FRME100M">
+    <div class="ct_contents" id="ct_contents">
+        <button type="button" class="navCloseAll icoCnt_allClose" onclick="closeAllTabs(true)" th:title="#{FRME100M.tab.closeAll}"/>
+        <!--  ct_contents 영역 (Data Frame) -->
+    </div>
+    <div th:replace="~{/th/frme/FRME_MENU_SIDE.html :: FRME_MENU_SIDE}"></div>
+
+    <script type="text/javascript" th:src="@{/js/biz/comm/tabMenu.js(v=${session.v})}"></script>
+    <script type="text/javascript" th:src="@{/js/biz/frme/FRME100M.js(v=${session.v})}"></script>
+    <script>
+		$(document).ready(function () {
+			MAINFRAME.initMainFrame();
+		});
+    </script>
+
+</section><!-- // mainContainer -->
+
+</html>
+
+

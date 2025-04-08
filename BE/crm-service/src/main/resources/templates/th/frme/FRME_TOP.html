@@ -1,0 +1,78 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="fragment_FRME_TOP">
+    <header class="header_wrap">
+
+        <div class="system_top" th:replace="~{/th/frme/FRME_MENU_SYSTEM.html :: FRME_MENU_SYSTEM}"></div>
+
+        <div id="FRME_MENU_SYSTEM_FN" class="head_top ">
+            <p class="taskTrans" id="FRME_MENU_SYSTEM_FN_BTN">
+                <button class="icoCnt_taskTrans" onclick="FRME_TOP_fnOpenPopFRME290P()"><span th:text="#{FRME_TOP.change.work.button}"></span></button>
+                <button id="FRME_MENU_SYSTEM_FN_BTN_GV" class="icoCnt_workTrans" onclick="FRME_TOP_fnOpenPopChangeGV()">GV</button>
+            </p>
+            <script th:inline="javascript">
+                $(document).ready(function () {
+                    MAINFRAME.displayGVBtn();
+                });
+
+                function FRME_TOP_fnOpenPopFRME290P() {
+                    if ($("#FRME_MENU_SYSTEM_FN_BTN input[type=checkbox]").is(":checked")) {
+                        Utils.alert([[#{FRME_TOP.change.work.alert}]]);
+                        return;
+                    }
+
+                    Utils.setCallbackFunction("FRME_TOP_fnChangeGrdCallback", function () {
+                        MAINFRAME.updateSessionUser();					// 시점 문제 콜백으로 되어있음
+                        {
+                            closeAllTabs(false);
+                            FRME_TOP_fnClearCnslSwitch()
+                        }
+
+                        {   // frame init
+                            Utils.closeAllPopup();
+                            MAINFRAME.initMainFrame();
+                        }
+                    });
+                    Utils.openKendoWindow("/frme/FRME290P", 465, 430, "left", 40, 90, false, {callbackKey: "FRME_TOP_fnChangeGrdCallback"});
+                }
+
+                function FRME_TOP_fnOpenPopChangeGV() {
+                    Utils.setCallbackFunction("FRME_TOP_fnChangeGVCallback", function () {
+                        MAINFRAME.updateSessionUser();
+                        {
+                            closeAllTabs(false);
+                            FRME_TOP_fnClearCnslSwitch()
+                        }
+
+                        {   // frame init
+                            Utils.closeAllPopup();
+                            MAINFRAME.initMainFrame();
+                        }
+
+                        //Utils.alert("<spring:message code="FRME_TOP.change.GV.alert"/>");
+                        document.location.reload();
+                    });
+                    Utils.openKendoWindow("/comm/COMM150P", 500, 340, "left", 40, 90, false, {callbackKey: "FRME_TOP_fnChangeGVCallback"});
+                }
+            </script>
+
+            <div th:replace="~{/th/frme/FRME_TOP_MCQ.html :: FRME_TOP_MCQ}"></div>
+
+        </div><!-- //head_top -->
+    </header><!-- //header_wrap -->
+
+    <!-- left GNB -->
+    <nav class="sideL_wrap"><div class="imenu"><span th:text="#{FRME_TOP.menu}"/></div>
+        <div class="nav">
+            <ul class="nav_list"></ul>
+        </div>
+        <button type="button" class="btn_menu_open" th:title="#{FRME_TOP.menu.open}">
+        <!-- <span class="k-icon k-i-more-vertical"></span>-->
+        <!-- <span class="k-icon k-i-grid k-icon-32" style="margin-left:9px; margin-top:4px;"></span> 대메뉴아이콘01-->
+        <!-- <span class="k-icon k-i-menu k-icon-32" style="margin-left:10px; margin-top:10px;"></span>대메뉴아이콘02-->
+        <!--  <span class="k-icon k-i-group k-icon-32" style="margin-left:10px; margin-top:10px;"></span>대메뉴아이콘03-->
+        <!-- <span class="k-icon k-i-table k-icon-32" style="margin-left:10px; margin-top:10px;"></span> 대메뉴아이콘04-->
+        <span class="k-icon k-i-grid-layout k-icon-32" style="margin-left:10px; margin-top:2px;"></span>
+        </button>
+    </nav>
+    <!-- //sideL_wrap -->
+</div>

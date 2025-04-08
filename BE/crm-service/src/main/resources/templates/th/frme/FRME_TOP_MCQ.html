@@ -1,0 +1,80 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="FRME_TOP_MCQ">
+    <!-- [상담대기자] 없을때 -->
+    <p class="nodataMembers" style="display: none"><mark class="icoCnt_chat"></mark>상담 대기자가 없습니다.</p>
+
+    <!-- [상담대기자] 있을때 -->
+    <ul class="membersWaiting" id="FRME_MENU_MCQ" style="display: none">
+        <li><a class="icoCnt_kakao"><!-- [카톡]일때 class="icoCnt_kakao" /  [네이버톡]일때 class="icoCnt_naverTalk" /  [페이스북메신저]일때 class="icoCnt_faceMsg" /  [인스타그램]일때 class="icoCnt_instagram" /  [텔레그램]일때 class="icoCnt_telegram" /  [채팅상담]일때 class="icoCnt_chatBot" /  [1:1상담]일때 class="icoCnt_oneOn" /  [이메일상담]일때 class="icoCnt_email"   -->
+                <span class="user">홍길동</span>
+                <span class="category">상담카테고리 > 상담카테고리</span>
+                <time> 06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_naverTalk">
+                <span class="user">김영희</span>
+                <span class="category">상담카테고리상담 > 카테고리상담상담</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_faceMsg">
+                <span class="user">동서남북</span>
+                 <span class="category">상담카테고리 > 카테고리카테고리카테고리카테고리카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_instagram">
+                <span class="user">홍길동</span>
+                <span class="category">상담카테고리02 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_telegram">
+                <span class="user">Hong Gill Dong</span>
+                <span class="category">상담카테고리0333 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_chatBot">
+                <span class="user">김영희</span>
+                <span class="category">상담카테고리0111 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_oneOn">
+                <span class="user">동서남북</span>
+                <span class="category">상담카테고리 456 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_email">
+                <span class="user">홍길동</span>
+                <span class="category">상담카테고리789 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_kakao">
+                <span class="user">홍길동</span>
+                <span class="category">상담카테고리 > 카테고리123</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_chatBot">
+                <span class="user">김영희</span>
+                <span class="category">상담카테고리 > 카테고리4555</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_chatBot">
+                <span class="user">동서남북</span>
+                <span class="category">상담카테고리 > 카테고리 45645465</span>
+                <time>06-15 09:21</time>
+        </a></li>
+        <li><a class="icoCnt_faceMsg">
+                <span class="user">동서남북</span>
+                <span class="category">상담카테고리 > 카테고리</span>
+                <time>06-15 09:21</time>
+        </a></li>
+    </ul>
+    <script>
+        $(document).ready(function () {
+            $("#FRME_MENU_MCQ").kendoMenu({
+                scrollable: true,
+                select: function (e) {
+                    this.element.find('.selected').removeClass('selected');
+                    $(e.item).addClass('selected');
+                },
+            });
+        });
+    </script>
+</div>

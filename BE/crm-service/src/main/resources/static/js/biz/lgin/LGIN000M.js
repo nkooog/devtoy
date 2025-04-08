@@ -373,43 +373,27 @@ function fn_loginCallback(loginRtn){
 	tryCount++;
 }
 
-function popupMain(data){
-
-	console.log(data);
-
-	$.ajax({
-		url : GLOBAL.contextPath + '/main',
-		dataType: "html",
-		type:'Get',
-		headers : {
-			'Authorization' : ''
-		},
-		success : function (result) {
-			var winTitle= /*[[#{info.system.title}]]*/ +' Ver 1.0.0.0';
-			var width="1680";
-			var height="1050";
-			var winFullOpts='height=' + screen.availHeight + ',width=' + screen.availWidth +',scrollbars=no,resizable=yes,top=0,left=0,fullscreen=yes';
-			window.open(GLOBAL.contextPath + '/main', winTitle, winFullOpts);
-		}
-	})
+function popupMain(){
 
 	//full size
-	// var URL= GLOBAL.contextPath + '/main';
-	// var winTitle= /*[[#{info.system.title}]]*/ +' Ver 1.0.0.0';
-	// var width="1680";
-	// var height="1050";
-	// var winFullOpts='height=' + screen.availHeight + ',width=' + screen.availWidth +',scrollbars=no,resizable=yes,top=0,left=0,fullscreen=yes';
+	var URL= GLOBAL.contextPath + '/main';
+	var winTitle= /*[[#{info.system.title}]]*/ +' Ver 1.0.0.0';
+	var width="1680";
+	var height="1050";
+	var winFullOpts='height=' + screen.availHeight + ',width=' + screen.availWidth +',scrollbars=no,resizable=yes,top=0,left=0,fullscreen=yes';
 	//
 	// //full size
-	// const mainpopup = window.open(URL, winTitle, winFullOpts);
-	//
-	// // 팝업이 성공적으로 열렸는지 확인
-	// if (mainpopup) {
-	// 	mainpopup.name = 'ispopup'; // 여기서 name 속성을 설정
-	// 	self.close();
-	// } else {
-	// 	console.log('팝업을 열 수 없습니다. 팝업 차단기 설정을 확인하세요.');
-	// }
+	const mainpopup = window.open(URL, winTitle, winFullOpts);
+
+	// 팝업이 성공적으로 열렸는지 확인
+	if (mainpopup) {
+		mainpopup.name = 'ispopup'; // 여기서 name 속성을 설정
+		self.close();
+	} else {
+		console.log('팝업을 열 수 없습니다. 팝업 차단기 설정을 확인하세요.');
+	}
+
+
 }
 function changePwd(){
 	var popupX = (document.body.offsetWidth / 2) - (200 / 2);

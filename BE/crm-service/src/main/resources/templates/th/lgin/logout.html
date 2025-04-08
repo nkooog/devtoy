@@ -1,0 +1,26 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<script type="text/javascript" th:src="@{/js/jquery/3.2.1/jquery.min.js}"></script>
+<div th:replace="~{/th/frme/FRME_HEAD.html :: fragment_header}"></div>
+</head>
+<script type="text/javascript" th:inline="javascript">
+$(document).ready(function(){
+	$("body").addClass('themeDefault');
+	closeAllPopup();
+});
+
+function closeAllPopup() {
+	Utils.alert("만료", () => window.location.href = GLOBAL.contextPath + "/index");
+}
+
+function findOpenerWindow(obj) {
+	if (obj.opener) {
+		arr.push(obj.opener);
+		return findOpenerWindow(obj.opener);
+	} else {
+		return null;
+	}
+}
+
+</script>
+</html>
