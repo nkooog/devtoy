@@ -2,9 +2,9 @@ spring:
   application:
     name: elh-service
   thymeleaf:
-    prefix: classpath:/templates/
+    prefix: classpath:/templates
     suffix: .html
-    view-names: th/*
+    view-names: /th/*
     check-template-location: true
   h2:
     console:
