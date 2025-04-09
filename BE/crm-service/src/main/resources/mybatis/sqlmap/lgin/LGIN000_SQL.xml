@@ -171,14 +171,32 @@
 		,     scrt_no                   AS scrtNo
 		,     ac_st_cd                  AS acStCd
 		,     ac_st_rsn_cd              AS acStRsnCd
-		,     scrt_no_lst_upd_dtm       AS scrtNoLstUpdDtm
+		,     CASE
+					WHEN CURRENT_TIMESTAMP <![CDATA[>]]> scrt_no_lst_upd_dtm + INTERVAL '90 day'
+					THEN TRUE
+					ELSE FALSE
+					END
+			  AS checkPassWord
 		,     pw_err_tcnt               AS pwErrTcnt
 		,     org_cd                    AS orgCd
 		,     qual_acqs_dd              AS qualAcqsDd
 		,     qual_loss_dd              AS qualLossDd
+		,     CASE
+					WHEN CURRENT_TIMESTAMP <![CDATA[>]]> qual_loss_dd
+					THEN TRUE
+					ELSE FALSE
+					END
+			  AS checkQualLossDd
+		,     CASE
+					WHEN PW_ERR_TCNT <![CDATA[<]]> (SELECT BS_VL1::NUMERIC  FROM T_BASC_VLU_INFO X WHERE X.TENANT_ID = A.TENANT_ID AND BS_VL_MGNT_NO = 4)
+					THEN TRUE
+					ELSE FALSE
+					END
+					AS checkPwErrTcnt
 		,     usr_grd                   AS usrGrd
 		,     #{mlingCd}                AS mlingCd
-		FROM  t_usr_info_mgnt
+		,	  (SELECT BS_VL1::NUMERIC  FROM T_BASC_VLU_INFO X WHERE X.TENANT_ID = A.TENANT_ID AND BS_VL_MGNT_NO = 4) AS bscPwErrTcnt
+		FROM  t_usr_info_mgnt A
 		<where>
 			<if test="tenantId != null and tenantId != ''">
 				AND	tenant_id                 = #{tenantId}
@@ -348,7 +366,7 @@
 	<!-- 정상 로그인인 경우 -->
 	<update id="LGIN000UPT02" parameterType="LGIN000VO">
 		UPDATE t_usr_info_mgnt
-		SET    ac_st_cd              =  '1'       <!-- 1. 정상 -->
+		SET    ac_st_cd          =  '1'       <!-- 1. 정상 -->
 		,  ac_st_rsn_cd          =  '1'       <!-- 1. 로그인 -->
 		,  pw_err_tcnt           =  0         <!-- 오류건수 초기화 -->
 		,  lst_lgin_dtm          =  NOW()

@@ -6,16 +6,6 @@
         contextPath = contextPath.slice(0, -1);
     }
 
-    //shpark 20241025 : 결함리포트 15 수정
-    if(window.opener == null || window.opener.closed ){
-        //url 직접 접근 막기.
-        //내부에서 kendo window open시에는 window.opener가 null이 아니므로 self == top을 이용하여 팝업창을 열었는지 확인 가능
-        if(self == top){
-            if(window.name != 'ispopup'){
-                window.location.href = "${pageContext.request.contextPath}/lgin/login";
-            }
-        }
-    }
     var GLOBAL = {
         debug: true,
         contextPath: contextPath,

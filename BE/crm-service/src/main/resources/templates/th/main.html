@@ -1,0 +1,43 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head> <!-- 소스수정함 취소 -->
+    <div th:replace="~{/th/frme/FRME_HEAD.html :: fragment_header}"></div>
+</head>
+
+<body th:class="${#strings.isEmpty(examData) ? 'themeDefault' : usrEnvr.sknCdNm}" onbeforeunload="Utils.closeAllPopup()">
+
+<div th:replace="~{/th/frme/FRME_TOP.html :: fragment_FRME_TOP}"></div>
+<div th:replace="~{/th/frme/FRME100M.html :: fragment_FRME100M}"></div>
+
+
+<span id="notification" style="display:none;" data-role="notification"></span>
+
+<div th:replace="~{/th/frme/FRME_BOTTOM.html :: FRME_BOTTOM}" ></div>
+
+<!-- 로딩중 팝업 영역 -->
+<div class="modalWrap active">
+    <div class="loader">
+        <div class="loader_box">
+            <div class="loader-13"></div>
+            <p class="loader_tit">데이터 처리중입니다.</p>
+            <p>잠시만 기다려 주시기 바랍니다.</p>
+        </div>
+        <button class="close-btn"></button>
+    </div>
+</div>
+<script th:inline="javascript">
+	$(document).ready(function(){
+		$('.close-btn').click(function(){
+			$('.modalWrap').addClass('active');
+
+		});
+		let pswChangeCount = Number('[[${pswChangeCount}]]');
+		setTimeout(function () {
+			if(pswChangeCount <= 1) {
+				// Utils.openKendoWindowPasswordChange("/frme/FRME320P", 800, 300, "center", 0, 50, false);
+
+			}
+		}, 500);
+	});
+</script>
+</body>
+</html>

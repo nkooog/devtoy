@@ -3,6 +3,20 @@ spring:
     name: gw-service
   cloud:
     gateway:
+      paths-to-exclude:
+        - ${ROOT_PATH}/index
+        - ${ROOT_PATH}/lgin
+        - ${ROOT_PATH}/js
+        - ${ROOT_PATH}/css
+        - ${ROOT_PATH}/images
+        - ${ROOT_PATH}/libs
+        - ${ROOT_PATH}/auth
+      default-filters:
+        - name : GlobalFilter
+          args :
+            baseMessage : Spring Cloud Gateway Global Filter
+            preLogger  : true
+            postLogger : true
       globalcors:
         cors-configurations:
           '[/**]' :
@@ -19,17 +33,19 @@ spring:
         - id : crm-service
           uri: lb://crm-service
           predicates:
-            - Path=/bcs/crm/**, /bcs/css/**, /bcs/images/**
+            - Path=${ROOT_PATH}/*, ${ROOT_PATH}/**, ${ROOT_PATH}/**
         - id: elh-service
           uri: lb://elh-service
           predicates:
             - Path=/elh/**
 
 
+
 logging:
   level:
     org.springframework.web: DEBUG           # Spring Web의 HTTP 요청과 응답 로그
     org.springframework.cloud.gateway: DEBUG # Spring Cloud Gateway의 요청과 응답 로그
+    org.gateway : DEBUG
 
 server:
   port: 45000
@@ -43,3 +59,6 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
+
+ncrm:
+  redirect: ${ROOT_PATH}/auth

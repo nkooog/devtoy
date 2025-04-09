@@ -1,0 +1,40 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="FRME_MENU_SIDE">
+    <aside class="sideWrap">
+        <ul class="sideMenu">
+            <li onclick="FRME_MENU_SIDE_fnOpenMenu(this)" id="FRME_MENU_SIDE_myCnt" class="icoCnt_myCnt" th:title="#{FRME_MENU_SIDE.myCnt}"></li>
+            <li onclick="FRME_MENU_SIDE_fnOpenMenu(this)" id="FRME_MENU_SIDE_ars" class="icoCnt_ARS" th:title="#{FRME_MENU_SIDE.ars}"></li>
+            <li onclick="FRME_MENU_SIDE_fnOpenMenu(this)" id="FRME_MENU_SIDE_callReserv" class="icoCnt_callReserv" th:title="#{FRME_MENU_SIDE.callReserv}"></li>
+            <li onclick="FRME_MENU_SIDE_fnOpenMenu(this)" id="FRME_MENU_SIDE_taskReserv" class="icoCnt_taskReserv" th:title="#{FRME_MENU_SIDE.taskReserv}"></li>
+        </ul>
+    </aside>
+    <script>
+        $('.sideMenu').kendoTooltip({
+            filter: "li",
+            position: "left",
+            show: function () {
+                this.popup.wrapper.width('auto').addClass('textTooltip');
+            },
+        });
+
+		function FRME_MENU_SIDE_fnOpenMenu(obj) {
+			switch ($(obj).attr("id")) {
+				case "FRME_MENU_SIDE_myCnt": // MY컨텐츠
+					Utils.openPop(GLOBAL.contextPath + "/frme/FRME220P", "FRME220P", 1200, 850);
+					break;
+				case "FRME_MENU_SIDE_ars": // ARS콜백
+					Utils.openPop(GLOBAL.contextPath + "/frme/FRME230P", "FRME230P", 1600, 575);
+					break;
+				case "FRME_MENU_SIDE_callReserv": // 통화예약
+					Utils.openPop(GLOBAL.contextPath + "/frme/FRME240P", "FRME240P", 1000, 560);
+					break;
+				case "FRME_MENU_SIDE_taskReserv": // 업무예약
+					Utils.openPop(GLOBAL.contextPath + "/frme/FRME250P", "FRME250P", 1050, 560);
+					break;
+				// case "FRME_MENU_SIDE_chat": // 채팅문구
+				//     Utils.openPop(GLOBAL.contextPath + "/frme/FRME260P", "FRME260P", 1100, 900);
+				//     break;
+			}
+		}
+    </script>
+</div>

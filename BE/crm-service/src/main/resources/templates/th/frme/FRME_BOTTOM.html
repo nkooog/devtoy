@@ -1,0 +1,26 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<footer th:fragment="FRME_BOTTOM" class="fooerWrap">
+    <button type="button" id="FRME_BOTTOM_toggleMarquee" class="btMarquee k-icon k-i-volume-up" th:title="#{FRME_BOTTOM.toggle.Marquee.title}"></button><!-- 클릭시 toggleClass="Stop" -->
+    <div id="FRME_BOTTOM_oprNoti" class="footerMarquee" onclick="FRME_BOTTOM_fnOpenDetail(this)" data-path-id="SYSM500M">
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+		function FRME_BOTTOM_fnOpenDetail(obj) {
+			let pathId = $(obj).data("path-id");
+			let $menu = $(".sideL_wrap .nav_list li[data-path-id=" + pathId + "]");
+
+			if ($menu.length > 0 && $menu.data("usr-grd-auth") == "Y") {
+				MAINFRAME.openDataFrameById(pathId);
+			} else {
+				// TODO : 인수인계 : 알림상세에 관련된 내용 나오면 작업필요 (관리자 이외의 알림 내용 확인가능한 기능)
+			}
+		}
+
+		function FRME_BOTTOM_fnOpenPageLink() {
+			const targetLink = "http://www.broadcns.com";
+			// TODO : Link DB저장 시, 테넌트 값에 따른 call 추가 필요
+			return window.open(targetLink,'_blank');
+		}
+    </script>
+
+    <button type="button" class="footerBanner" onclick="FRME_BOTTOM_fnOpenPageLink();" th:title="#{FRME_BOTTOM.footer.Banner}"></button>
+</footer>

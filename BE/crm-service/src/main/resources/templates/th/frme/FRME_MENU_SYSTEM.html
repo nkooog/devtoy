@@ -1,0 +1,245 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="FRME_MENU_SYSTEM" class="system_top">
+    <h1>
+        <a href="javascript:MAINFRAME.dataFrameLoad({})">
+            <img th:src="@{/images/contents/logo_top.png}" class="exona_logo" id="FRME_TOP_CI" alt="Bona Cloud AI-CRM">
+            <img src="" id="FRME_CLASSIFICATION">
+        </a>
+    </h1>
+    <script type="text/javascript" th:inline="javascript">
+		let SYSTEM_URL_PORT = new RegExp(/\d{4}/).exec(window.location.href);
+		if(SYSTEM_URL_PORT !== null){
+			if(SYSTEM_URL_PORT[0] ==='8081'){
+				$("#FRME_CLASSIFICATION").attr("src", GLOBAL.contextPath + "/images/contents/logo_top_developmentNew.png");
+			} else if(SYSTEM_URL_PORT[0] ==='8082'){
+				$("#FRME_CLASSIFICATION").attr("src", GLOBAL.contextPath + "/images/contents/logo_top_verificationNew.png");
+			}
+            $("#FRME_CLASSIFICATION, #FRME_TOP_CI").css("vertical-align","middle");
+        }
+    </script>
+    <!-- 상단 업무 전광판-->
+    <!-- 상단 업무 전광판-->
+    <dl class="taskSpace2" >
+		<dd class="billboard">
+			<p class="rate cs ${empty usrEnvr.sknCdNm ? 'themeDefault' : usrEnvr.sknCdNm}">
+                <span th:text="#{FRME_MENU_SYSTEM.business.board.wait}"/><em id="monitor_waite_call_count">0</em>
+            </p>
+			<p class="rate">
+                <span th:text="#{FRME_MENU_SYSTEM.business.board.listen}"/><em id="monitor_agent_available">0</em>
+            </p>
+			<p class="rate">
+                <span th:text="#{FRME_MENU_SYSTEM.business.board.total.intake}"/><em id="monitor_enter_call_count">0</em>
+            </p>
+			<p class="rate">
+                <span th:text="#{FRME_MENU_SYSTEM.business.board.response.rate}"/><em id="monitor_interaction_percent">0%</em>
+            </p>
+			<p class="rate">
+                <span th:text="#{FRME_MENU_SYSTEM.business.board.callTime}"/><em id="stopwatch">00:00:00</em>
+            </p>
+		</dd>
+	</dl>
+	<!--// 상단 업무 전광판 //-->
+
+    <ul class="topUtil" id="FRME_MENU_SYSTEM" style="display: none">
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_blog"      class="icoUtil_blog" title="BROAD C&S 네이버 블로그"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_alrm"      class="icoUtil_alarm"        th:title="#{FRME_MENU_SYSTEM.top.menu.alarm}"><mark class="badge">N</mark></li> <!-- 알림시  addClass="Active" -->
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_adtnSvc"   class="icoUtil_ExtraService" th:title="#{FRME_MENU_SYSTEM.top.menu.Extra.service}"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_sms"       class="icoUtil_sms"      title="SMS"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_kldSrch"   class="icoUtil_kms"      title="KMS"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_qlnk"      class="icoUtil_link"     title="Quick Link"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_favrlist"  class="icoUtil_favorite" th:title="#{FRME_MENU_SYSTEM.top.menu.Favorites}"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_hlpdk"     class="icoUtil_helpDesk" th:title="#{FRME_MENU_SYSTEM.top.menu.helpdesk}"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_envr"      class="icoUtil_setup"    th:title="#{FRME_MENU_SYSTEM.top.menu.Preferences}"></li>
+        <li onclick="FRME_MENU_SYSTEM_fnOpenMenu(this)" id="FRME_MENU_SYSTEM_usr"       class="icoUtil_myInfo"   th:title="#{FRME_MENU_SYSTEM.top.menu.User.information}"></li>
+    </ul>
+
+    <script th:inline="javascript">
+		$('.topUtil').kendoTooltip({
+			filter: "li",
+			position: "bottom",
+			show: function () {
+				this.popup.wrapper.width('auto').addClass('textTooltip');
+			},
+		});
+
+		function FRME_MENU_SYSTEM_fnOpenMenu(obj) {
+			switch ($(obj).attr("id")) {
+				case "FRME_MENU_SYSTEM_alrm":
+					Utils.setCallbackFunction("FRME170P_fnAlrmCallback",function(data){
+						switch (data.index) {
+							case 0: // 통합게시판
+								Utils.getParent().MAINFRAME_SUB.openDataFrameById("CMMT200M", {CMMT200M_puslmnCount:data.param1, CMMT200M_ncsyCount:data.param2});
+								break;
+							case 1: // 지식관리
+								Utils.getParent().MAINFRAME_SUB.openDataFrameById("KMST200M", {KMST200M_puslmnCount:data.param1, KMST200M_ncsyCount:data.param2});
+								break;
+							case 2: // 통화예약
+								// Utils.getParent().MAINFRAME_SUB.openDataFrameById("MCNS300M");
+								Utils.openPop(GLOBAL.contextPath + "/frme/FRME240P", "FRME240P", 1000, 575,{},true);
+								break;
+							case 3: // 쪽지q
+								Utils.getParent().MAINFRAME_SUB.openDataFrameById("CMMT500M");
+								break;
+							case 4: // 업무이관
+								// Utils.getParent().MAINFRAME_SUB.openDataFrameById("MCNS500M");
+								Utils.openPop(GLOBAL.contextPath + "/frme/FRME250P", "FRME250P", 1000, 575,{},true);
+								break;
+							case 5: // 콜백
+								Utils.openPop(GLOBAL.contextPath + "/frme/FRME230P", "FRME230P", 1600, 575,{},true);
+								// Utils.getParent().MAINFRAME_SUB.openDataFrameById("MCNS200M");
+								break;
+							case 6: // 일정
+								Utils.getParent().MAINFRAME_SUB.openDataFrameById("CMMT400M");
+								break;
+						}
+
+					});
+
+					//kw---20241015 : 조건별 상단 메뉴에서 숨기기 (kendoWindo 사이즈 조절)
+					//1) 외부 KMS를 사용할 경우 알림 아이콘 클릭시 생성되는 지식관리 버튼 숨기면서 생기는 공백 조절
+					let frmHeight = 510;
+					let minCnt = 0;
+					minCnt += Utils.queryObjectsByConditions(GLOBAL.bascVlu.list, { id: '42', useYn: 'Y' }, 'find') ? 1 : 0;
+					frmHeight = frmHeight - (60 * minCnt);
+
+					Utils.openKendoWindow("/frme/FRME170P", 400, frmHeight, "right", 0, 50, false,{callbackKey: "FRME170P_fnAlrmCallback"});
+					break;
+				case "FRME_MENU_SYSTEM_adtnSvc":
+					Utils.openKendoWindow("/frme/FRME300P", 300, 430, "right", 0, 50, false);
+					break;
+				case "FRME_MENU_SYSTEM_sms":
+					Utils.openPop(GLOBAL.contextPath + "/sysm/SYSM433P", "SYSM433P", 1200, 1110);
+					break;
+				case "FRME_MENU_SYSTEM_kldSrch":
+					//shpark 20240912 : 테넌트 기준정보의 외부 KMS 사용 여부 Y일 시 외부 KMS URL 로 연결
+					let findObj = Utils.queryObjectsByConditions(GLOBAL.bascVlu.list , {id : '42' , useYn : 'Y'}  , 'find')
+					if(findObj){
+						window.open(findObj.bsVl1,'_blank');
+					}else{
+						Utils.openPop(GLOBAL.contextPath + "/kmst/KMST300P", "KMST300P", 1200, 900);
+					}
+					break;
+				case "FRME_MENU_SYSTEM_qlnk":
+					Utils.openKendoWindow("/frme/FRME140P", 400, 530, "right", 0, 50, false);
+					break;
+				case "FRME_MENU_SYSTEM_favrlist":
+					Utils.openKendoWindow("/frme/FRME150P", 400, 530, "right", 0, 50, false);
+					break;
+				case "FRME_MENU_SYSTEM_hlpdk":
+					Utils.openKendoWindow("/frme/FRME110P", 400, 530, "right", 0, 50, false);
+					break;
+				case "FRME_MENU_SYSTEM_envr":
+
+					//kw---20241015 : 조건별 상단 메뉴에서 숨기기 (kendoWindo 사이즈 조절)
+					//1) 외부 KMS를 사용할 경우 알림 아이콘 클릭시 생성되는 지식관리 버튼 숨기면서 생기는 공백 조절
+
+					let frmEnvrHeight = 610;
+					let minEnvrCnt = 0;
+
+					let tenantInfoSmsObj = Utils.getObjectFromList(GLOBAL.bascVlu.list, 'bsVlMgntNo', 30);
+					if (Utils.isNull(tenantInfoSmsObj) || tenantInfoSmsObj.useYn != "Y" || Utils.isNull(tenantInfoSmsObj.bsVl1)) {
+						minEnvrCnt++;
+					}
+					frmEnvrHeight = frmEnvrHeight - (30 * minEnvrCnt);
+
+					Utils.openKendoWindow("/frme/FRME160P", 400, frmEnvrHeight, "right", 0, 50, false);
+					break;
+				case "FRME_MENU_SYSTEM_usr":
+					Utils.openKendoWindow("/frme/FRME180P", 380, 490, "right", 0, 50, false, {callbackKey: "FRME180P_fnSaveUsrDgindCallback"});
+					break;
+				case "FRME_MENU_SYSTEM_blog":
+					window.open('https://blog.naver.com/broadcns2013','_blank');
+					break;
+			}
+		}
+
+
+		// 소프트폰 스톱워치부분
+		let timerId;
+		let time = 0;
+		const stopwatch = document.getElementById("stopwatch");
+		let  hour, min, sec;
+
+		function printTime() {
+			time++;
+			stopwatch.innerText = getTimeFormatString();
+		}
+
+		function startClock() {
+			printTime();
+			stopClock();
+			timerId = setTimeout(startClock, 1000);
+		}
+
+		function stopClock() {
+			if (timerId != null) {
+				clearTimeout(timerId);
+			}
+		}
+
+		function resetClock() {
+			stopClock()
+			stopwatch.innerText = "00:00:00";
+			time = 0;
+		}
+
+		function getTimeFormatString() {
+			hour = parseInt(String(time / (60 * 60)));
+			min = parseInt(String((time - (hour * 60 * 60)) / 60));
+			sec = time % 60;
+
+			return String(hour).padStart(2, '0') + ":" + String(min).padStart(2, '0') + ":" + String(sec).padStart(2, '0');
+		}
+
+		//kw---20231123 : 패스워드 90일 체크 시작
+		function FRME_fnUserPwdCheck(){
+
+			//패스워드 변경 기간이 며칠 됐는지 확인하기 위한 파라미터
+			let param = {
+				tenantId 	: GLOBAL.session.user.tenantId,
+				usrId		: GLOBAL.session.user.usrId
+			}
+			Utils.ajaxCall('/sysm/SYSM200SEL08', JSON.stringify(param),function(result){
+				let jsonReslut = JSON.parse(result.list);
+				let scrtNoOverDays = jsonReslut[0].scrtNoOverDays;
+				//패스워드 유효기간이 7일 이하 부터 해당 기능이 동작하도록 하기 위함 (90일을 기준으로 하기 때문에 90-7일인 83일 부터)
+				if(scrtNoOverDays > 82){
+
+					let msgConfirm = '';
+
+					//메세지 문구 생성
+					if(scrtNoOverDays >= 90){
+						//비밀번호 유효기간이 만료되었습니다.<br><br>*안전한 개인정보 보호를 위해<br>비밀번호를 변경하시려면 확인 버튼을,<br>90일뒤에 변경하시려면 취소 버튼을 눌러주세요.
+						msgConfirm = '[[#{FRME_MENU_SYSTEM.pw.check.up1}]]';
+					} else {
+						let datCount = 90-scrtNoOverDays;
+						//비밀번호 유효기간이 1일 남았습니다<br><br>*안전한 개인정보 보호를 위해<br>비밀번호를 변경하시려면 확인 버튼을,<br>90일뒤에 변경하시려면 취소 버튼을 눌러주세요.
+						msgConfirm = '[[#{FRME_MENU_SYSTEM.pw.check.down1}]]' + datCount + '[[#{FRME_MENU_SYSTEM.pw.check.down2}]]';
+					}
+
+					Utils.confirm(msgConfirm, function(){
+                        Utils.openKendoWindowPasswordChange("/frme/FRME320P", 800, 300, "center", 0, 50, false);
+					}, function(){
+						//취소 버튼을 눌렀을 경우
+						let param ={
+							tenantId            : GLOBAL.session.user.tenantId,
+							usrId               : GLOBAL.session.user.usrId,
+							lstCorprId          : GLOBAL.session.user.usrId,
+							lstCorprOrgCd       : GLOBAL.session.user.orgCd,
+						};
+						Utils.ajaxCall('/sysm/SYSM210UPT04', JSON.stringify(param), function(result){
+							Utils.alert(result.msg);
+						});
+					});
+				}
+
+			});
+		}
+
+		//화면이 완전히 load 된 후에 처리
+		window.onload = function() {
+			FRME_fnUserPwdCheck();
+		};
+
+    </script>
+</div><!-- //system_top -->

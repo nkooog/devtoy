@@ -1,6 +1,6 @@
 package org.crm.util.crypto;
 
-import org.crm.lgin.VO.LGIN000VO;
+import org.crm.lgin.model.vo.LGIN000VO;
 import org.crm.util.date.DateUtil;
 
 import java.nio.charset.StandardCharsets;
