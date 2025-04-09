@@ -45,9 +45,6 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
 					&& !exchange.getRequest().getCookies().containsKey(HttpHeaders.AUTHORIZATION)) {
 
-					log.debug(" path ::: {}", exchange.getRequest().getURI().getPath());
-					log.debug(" path check ::: {}", exchange.getRequest().getURI().getPath().equals(this.redirectUrl));
-
 					URI redirectUri = UriComponentsBuilder.fromUriString(this.redirectUrl)
 							.build().toUri();
 					exchange.getResponse().setStatusCode(HttpStatus.FOUND);
