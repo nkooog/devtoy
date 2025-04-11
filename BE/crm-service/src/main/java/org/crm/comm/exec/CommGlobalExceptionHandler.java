@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpServerErrorException;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Locale;
 
 @Slf4j
@@ -54,6 +55,11 @@ public class CommGlobalExceptionHandler {
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 				.body(this.objectMapper.writeValueAsString(json));
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public String handleAccessDeniedException(AccessDeniedException ex) {
+		return "/th/error/403";
 	}
 
 }
