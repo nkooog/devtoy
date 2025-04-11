@@ -6,15 +6,15 @@ import org.gateway.config.PathsToExclude;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.util.List;
 
 @Component
@@ -24,10 +24,12 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 	@Value("${ncrm.redirect}")
 	private String redirectUrl;
 	private PathsToExclude pathsToExclude;
+	private WebClient.Builder webClientBuilder;
 
-	public GlobalFilter(PathsToExclude pathsToExclude) {
+	public GlobalFilter(PathsToExclude pathsToExclude, WebClient.Builder webClientBuilder) {
 		super(Config.class);
 		this.pathsToExclude = pathsToExclude;
+		this.webClientBuilder = webClientBuilder;
 	}
 
 	@Override
@@ -45,18 +47,25 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
 					&& !exchange.getRequest().getCookies().containsKey(HttpHeaders.AUTHORIZATION)) {
 
-					URI redirectUri = UriComponentsBuilder.fromUriString(this.redirectUrl)
-							.build().toUri();
-					exchange.getResponse().setStatusCode(HttpStatus.FOUND);
-					exchange.getResponse().getHeaders().setLocation(redirectUri);
-					return exchange.getResponse().setComplete();
+					return webClientBuilder.build()
+							.get()
+							.uri("lb://crm-service" + redirectUrl) // lb://서비스명 + 경로
+							.header("X-GW-REASON", "jwt_missing")
+							.retrieve()
+							.toEntity(String.class)
+							.flatMap(responseEntity -> {
+								response.setStatusCode(responseEntity.getStatusCode());
+								response.getHeaders().addAll(responseEntity.getHeaders());
+								DataBufferFactory bufferFactory = response.bufferFactory();
+								DataBuffer dataBuffer = bufferFactory.wrap(responseEntity.getBody().getBytes());
+								return response.writeWith(Mono.just(dataBuffer));
+							});
 
 				}else{
 					//TODO: 인증 header는 있지만 토큰이 만료 된 경우 추가 로직
 				}
 			}
 
-			//Custom Post Filter
 			return chain.filter(exchange).then(Mono.fromRunnable(()->{
 				log.debug("Global Filter End: response status code -> {}", response.getStatusCode());
 			}));
