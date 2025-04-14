@@ -145,7 +145,7 @@ public class JwtTokenProvider {
 				.setSubject(subject.toString())
 				.setId(UUID.randomUUID().toString())
 				.claim(this.header, lgin000VO.getUsrGrd())
-				.setExpiration(accessTokenExpiration)
+				.setExpiration(this.accessTokenExpiration)
 				.compact();
 	}
 
@@ -153,7 +153,7 @@ public class JwtTokenProvider {
 		return Jwts.builder()
 				.signWith(this.KEY)
 				.setId(UUID.randomUUID().toString())
-				.setExpiration(refreshTokenExpiration)
+				.setExpiration(this.refreshTokenExpiration)
 				.compact();
 	}
 

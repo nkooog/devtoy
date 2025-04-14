@@ -24,6 +24,7 @@ services:
     environment:
       EUREKA_URL : http://eureka-service:45001/eureka/  # Docker 네트워크에서는 고정된 도메인 사용
       ROOT_PATH : /bcs/crm
+      REDIRECT_PATH : lb://crm-serviced
     networks:
       - app_network # 네트워크 연결
 

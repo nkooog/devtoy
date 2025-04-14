@@ -47,9 +47,9 @@ public class GlobalFilter extends AbstractGatewayFilterFactory<GlobalFilter.Conf
 				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
 					&& !exchange.getRequest().getCookies().containsKey(HttpHeaders.AUTHORIZATION)) {
 
-					return webClientBuilder.build()
+					return this.webClientBuilder.build()
 							.get()
-							.uri("lb://crm-service" + redirectUrl) // lb://서비스명 + 경로
+							.uri(this.redirectUrl) // lb://서비스명
 							.header("X-GW-REASON", "jwt_missing")
 							.retrieve()
 							.toEntity(String.class)
