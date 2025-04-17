@@ -1,9 +1,8 @@
 package org.crm.lgin.model.vo;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.crm.comm.VO.COMM000VO;
+import org.crm.comm.model.vo.COMM000VO;
 
 import java.sql.Date;
 import java.sql.Timestamp;

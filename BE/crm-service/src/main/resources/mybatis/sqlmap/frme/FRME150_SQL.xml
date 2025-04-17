@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.frme.service.mapper.FRME150Mapper">
+
+
+	<select id="FRME150SEL01" parameterType="FRME150VO" resultType="FRME150VO">
+		WITH RECURSIVE FAV(TENANT_ID, MENU_NM, MENU_ID, HGRK_MENU_ID, DATA_FRM_ID, DEPTH, PATH, CYCLE)
+		    AS (
+			SELECT 	M.TENANT_ID
+				,	M.MENU_NM
+			    ,	M.MENU_ID
+				,   M.HGRK_MENU_ID
+				,   M.DATA_FRM_ID
+				,   1, ARRAY[ROW(M.MENU_NM)], FALSE
+			FROM  	T_MENU_MGNT M
+			WHERE 	M.HGRK_MENU_ID IS NULL
+			  AND 	M.TENANT_ID 	= #{tenantId}
+			  AND 	M.MLING_CD 		= #{mlingCd}
+			UNION ALL
+			SELECT 	M.TENANT_ID
+				 ,	M.MENU_NM
+				 ,	M.MENU_ID
+				 ,  M.HGRK_MENU_ID
+				 ,  M.DATA_FRM_ID
+				 ,  F.DEPTH + 1, PATH || ROW(M.MENU_NM), ROW(M.MENU_NM) = ANY(PATH)
+			FROM  	T_MENU_MGNT M, FAV F
+			WHERE 	M.HGRK_MENU_ID = F.MENU_ID
+			  AND 	M.TENANT_ID 	= #{tenantId}
+			  AND 	M.MLING_CD 		= #{mlingCd}
+			  AND NOT CYCLE
+			)
+		SELECT 	 FAV.TENANT_ID			AS tenantId
+		     ,	 FAV.MENU_ID			AS menuId
+			 ,	 FAV.DATA_FRM_ID	    AS dataFrmId
+			 ,	 CC.MAPG_VLU1			AS mapgVlu1
+			 ,	 TRANSLATE(CAST(PATH[1] AS VARCHAR),'(")','') AS menuLv1
+			 ,	 TRANSLATE(CAST(PATH[2] AS VARCHAR),'(")','') AS menuLv2
+			 ,	 TRANSLATE(CAST(PATH[3] AS VARCHAR),'(")','') AS menuLv3
+			 , 	 TRANSLATE(REPLACE(CAST(PATH AS VARCHAR),  ',', '>'), '"{(\)}"','') AS menuNm
+		FROM 	 FAV
+				 LEFT JOIN T_FAVRLIST_MENU FM ON FAV.DATA_FRM_ID = FM.MENU_ID
+				 LEFT JOIN T_DATA_FRM DF ON DF.DATA_FRM_ID = FAV.DATA_FRM_ID AND DF.TENANT_ID = #{tenantId}
+				 LEFT JOIN T_COM_CD CC ON DF.DATA_FRME_CLAS_CD = CC.COM_CD AND CC.MGNT_ITEM_CD = 'C0018'
+		WHERE FM.TENANT_ID = #{tenantId}
+				AND FM.USR_ID = #{usrId}
+	</select>
+
+	<insert id="FRME150INS01" parameterType="FRME150VO">
+		INSERT INTO t_favrlist_menu (tenant_id, usr_id, menu_id, reg_dtm)
+		VALUES (
+				#{tenantId}
+			   , #{usrId}
+			   , #{menuId}
+			   , CURRENT_TIMESTAMP
+			   )
+	</insert>
+
+	<delete id="FRME150DEL01">
+			DELETE FROM t_favrlist_menu
+			WHERE tenant_id 					=    #{tenantId}
+			AND   usr_id						=	 #{usrId}
+			AND   menu_id						=	 #{menuId}
+	</delete>
+</mapper>

@@ -1,6 +1,6 @@
 package org.crm.util.file;
 
-import org.crm.comm.VO.COMM120VO;
+import org.crm.comm.model.vo.COMM120VO;
 import org.crm.util.date.DateUtil;
 import org.crm.util.json.JsonUtil;
 import org.apache.commons.io.FilenameUtils;

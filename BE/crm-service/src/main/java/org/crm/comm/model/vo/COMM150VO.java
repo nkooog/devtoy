@@ -1,4 +1,4 @@
-package org.crm.comm.VO;
+package org.crm.comm.model.vo;
 
 import lombok.*;
 

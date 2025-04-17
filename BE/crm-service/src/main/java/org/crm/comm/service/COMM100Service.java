@@ -1,6 +1,6 @@
 package org.crm.comm.service;
 
-import org.crm.comm.VO.COMM100VO;
+import org.crm.comm.model.vo.COMM100VO;
 
 import java.util.List;
 import java.util.Map;

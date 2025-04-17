@@ -1,6 +1,6 @@
 package org.crm.comm.service.impl;
 
-import org.crm.comm.VO.COMM100VO;
+import org.crm.comm.model.vo.COMM100VO;
 import org.crm.comm.service.COMM100Service;
 import org.crm.comm.service.dao.COMMCommDAO;
 import org.crm.lgin.model.vo.LGIN010VO;

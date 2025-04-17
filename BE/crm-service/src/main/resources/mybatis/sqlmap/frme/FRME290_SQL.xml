@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.frme.service.mapper.FRME290Mapper">
+
+    <select id="FRME290SEL01" parameterType="FRME290VO" resultType="FRME290VO">
+        SELECT *
+        FROM t_usr_menu_atht tuma
+        WHERE tenant_id = #{tenantId}
+          AND usr_id = #{usrId}
+        ORDER BY COALESCE(prf_rank_cd::NUMERIC, 0) ASC, CAST(usr_grd as int) ASC
+    </select>
+
+    <update id="FRME290UPT01" parameterType="FRME290VO">
+        UPDATE t_usr_menu_atht
+        SET biz_cho_yn       = null
+          , lst_corc_dtm     = CURRENT_TIMESTAMP
+          , lst_corpr_id     = #{lstCorprId}
+          , lst_corpr_org_cd = #{lstCorprOrgCd}
+        WHERE tenant_id = #{tenantId}
+          AND usr_id = #{usrId}
+    </update>
+
+    <update id="FRME290UPT02" parameterType="FRME290VO">
+        UPDATE t_usr_menu_atht
+        SET biz_cho_yn       = 'Y'
+          , lst_corc_dtm     = CURRENT_TIMESTAMP
+          , lst_corpr_id     = #{lstCorprId}
+          , lst_corpr_org_cd = #{lstCorprOrgCd}
+        WHERE tenant_id = #{tenantId}
+          AND usr_id = #{usrId}
+          AND usr_grd = #{usrGrd}
+    </update>
+
+<!--    <update id="FRME290UPT03" parameterType="FRME290VO">-->
+<!--        UPDATE t_usr_info_mgnt-->
+<!--        SET usr_grd       = #{usrGrd}-->
+<!--          , lst_corc_dtm     = CURRENT_TIMESTAMP-->
+<!--          , lst_corpr_id     = #{lstCorprId}-->
+<!--          , lst_corpr_org_cd = #{lstCorprOrgCd}-->
+<!--        WHERE tenant_id = #{tenantId}-->
+<!--          AND usr_id = #{usrId};-->
+<!--    </update>-->
+</mapper>

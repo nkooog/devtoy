@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.frme.service.mapper.FRME160Mapper">
+
+    <resultMap id="result" type="FRME160VO">
+        <result property="hlpdkUseYn" column="hlpdk_use_yn"/>
+        <result property="msgrUseYn" column="msgr_use_yn"/>
+        <result property="smsUseYn" column="sms_use_yn"/>
+        <result property="kldSrchUseYn" column="kld_srch_use_yn"/>
+        <result property="qLnkUseYn" column="q_lnk_use_yn"/>
+        <result property="favrlistUseYn" column="favrlist_use_yn"/>
+        <result property="alrmUseYn" column="alrm_use_yn"/>
+        <result property="miniDashUseYn" column="mini_dash_use_yn"/>
+        <result property="softPnUseYn" column="soft_pn_use_yn"/>
+        <result property="mcqUseYn" column="mcq_use_yn"/>
+        <result property="daulMoniUseYn" column="daul_moni_use_yn"/>
+        <result property="alrmEffctUseYn" column="alrm_effct_use_yn"/>
+        <result property="alrmPoupEffctUseYn" column="alrm_poup_effct_use_yn"/>
+        <result property="sknCd" column="skn_cd"/>
+        <result property="sknCdNm" column="mapg_vlu1"/>
+    </resultMap>
+
+    <select id="FRME160SEL01" parameterType="FRME160VO" resultMap="result">
+        SELECT *
+             , tcc.mapg_vlu1
+        FROM t_envr_stgup tes
+                 LEFT JOIN t_com_cd tcc ON tes.skn_cd = tcc.com_cd AND tcc.mgnt_item_cd = 'C0044' AND tcc.use_dv_cd = 'Y'
+        WHERE tenant_id = #{tenantId}
+          AND usr_id = #{usrId}
+    </select>
+
+    <insert id="FRME160UPT01" parameterType="FRME160VO">
+        INSERT INTO t_envr_stgup
+        ( tenant_id
+        , usr_id
+        , hlpdk_use_yn
+        , msgr_use_yn
+        , sms_use_yn
+        , kld_srch_use_yn
+        , q_lnk_use_yn
+        , favrlist_use_yn
+        , alrm_use_yn
+        , mini_dash_use_yn
+        , soft_pn_use_yn
+        , mcq_use_yn
+        , daul_moni_use_yn
+        , alrm_effct_use_yn
+        , alrm_poup_effct_use_yn
+        , skn_cd
+        , reg_dtm
+        , regr_id
+        , regr_org_cd
+        , lst_corc_dtm
+        , lst_corpr_id
+        , lst_corc_org_cd)
+        VALUES ( #{tenantId}
+               , #{usrId}
+               , #{hlpdkUseYn}
+               , #{msgrUseYn}
+               , #{smsUseYn}
+               , #{kldSrchUseYn}
+               , #{qLnkUseYn}
+               , #{favrlistUseYn}
+               , #{alrmUseYn}
+               , #{miniDashUseYn}
+               , #{softPnUseYn}
+               , #{mcqUseYn}
+               , #{daulMoniUseYn}
+               , #{alrmEffctUseYn}
+               , #{alrmPoupEffctUseYn}
+               , #{sknCd}
+               , CURRENT_TIMESTAMP
+               , #{regrId}
+               , #{regrOrgCd}
+               , CURRENT_TIMESTAMP
+               , #{lstCorprId}
+               , #{lstCorcOrgCd})
+        ON CONFLICT (tenant_id, usr_id)
+        DO
+        UPDATE
+            SET hlpdk_use_yn = #{hlpdkUseYn}
+            , msgr_use_yn = #{msgrUseYn}
+            , sms_use_yn = #{smsUseYn}
+            , kld_srch_use_yn = #{kldSrchUseYn}
+            , q_lnk_use_yn = #{qLnkUseYn}
+            , favrlist_use_yn = #{favrlistUseYn}
+            , alrm_use_yn = #{alrmUseYn}
+            , mini_dash_use_yn = #{miniDashUseYn}
+            , soft_pn_use_yn = #{softPnUseYn}
+            , mcq_use_yn = #{mcqUseYn}
+            , daul_moni_use_yn = #{daulMoniUseYn}
+            , alrm_effct_use_yn = #{alrmEffctUseYn}
+            , alrm_poup_effct_use_yn = #{alrmPoupEffctUseYn}
+            , skn_cd = #{sknCd}
+            , lst_corc_dtm = CURRENT_TIMESTAMP
+            , lst_corpr_id = #{lstCorprId}
+            , lst_corc_org_cd = #{lstCorcOrgCd}
+    </insert>
+</mapper>

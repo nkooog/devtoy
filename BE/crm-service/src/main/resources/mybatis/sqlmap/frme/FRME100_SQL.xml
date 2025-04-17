@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bcs.aicrm.frme.service.mapper.FRME100Mapper">
+
+    <resultMap id="result1" type="FRME100VO">
+        <result property="usrId" column="usr_id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="menuId" column="menu_id"/>
+        <result property="menuNm" column="menu_nm"/>
+        <result property="menuTypCd" column="menu_typ_cd"/>
+        <result property="prsMenuLvl" column="prs_menu_lvl"/>
+        <result property="hgrkMenuId" column="hgrk_menu_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="dataFrmeTmplCd" column="data_frme_tmpl_cd"/>
+        <result property="srtSeqNo" column="srt_seq_no"/>
+        <result property="iconTypClss" column="icon_typ_clss"/>
+        <result property="mlingCd" column="mling_cd"/>
+        <result property="mapgVlu1" column="mapg_vlu1"/>
+        <result property="usrGrd" column="usr_grd"/>
+        <result property="comCd" column="com_cd"/>
+    </resultMap>
+
+    <resultMap id="result2" type="SYSM500VO">
+        <result property="oprNotiNo" column="opr_noti_no"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="notiDvCd" column="noti_dv_cd"/>
+        <result property="notiTite" column="noti_tite"/>
+        <result property="notiCtt" column="noti_ctt"/>
+        <result property="notiStrDtm" column="noti_str_dtm"/>
+        <result property="notiEndDtm" column="noti_end_dtm"/>
+        <result property="apclDvCd" column="apcl_dv_cd"/>
+        <result property="regDtm" column="reg_dtm"/>
+        <result property="regrId" column="regr_id"/>
+        <result property="regrOrgCd" column="regr_org_cd"/>
+        <result property="lstCorcDtm" column="lst_corc_dtm"/>
+        <result property="lstCorprId" column="lst_corpr_id"/>
+        <result property="lstCorprOrgCd" column="lst_corpr_org_cd"/>
+    </resultMap>
+
+    <resultMap id="result3" type="SYSM310VO">
+        <result property="tenantId" column="tenant_id"/>
+        <result property="dataFrmId" column="data_frm_id"/>
+        <result property="usrGrd" column="usr_grd"/>
+        <result property="butnSeq" column="butn_seq"/>
+        <result property="butnTypCd" column="butn_typ_cd"/>
+        <result property="butnNm" column="butn_nm"/>
+    </resultMap>
+
+    <select id="FRME100SEL01" parameterType="FRME100VO" resultMap="result1">
+        SELECT tmm.tenant_id
+             , tmm.menu_id
+             , tmm.menu_nm
+             , tmm.menu_typ_cd
+             , tmm.prs_menu_lvl
+             , tmm.hgrk_menu_id
+             , tmm.srt_seq_no
+             , tmm.icon_typ_clss
+             , tdf.data_frm_id
+             , tdf.data_frme_tmpl_cd
+             , tcc.mapg_vlu1
+             , tcc.com_cd
+             , tgdfa.usr_grd
+        FROM t_menu_mgnt tmm
+                 LEFT JOIN t_grdby_menu_atht tgm ON tmm.tenant_id = tgm.tenant_id AND tmm.menu_id = tgm.menu_id
+                 LEFT JOIN t_data_frm tdf ON tmm.tenant_id = tdf.tenant_id AND tmm.data_frm_id = tdf.data_frm_id
+                 LEFT JOIN t_grdby_data_frme_atht tgdfa ON tmm.tenant_id = tgdfa.tenant_id AND tmm.data_frm_id = tgdfa.data_frm_id AND tgdfa.usr_grd = tgm.usr_grd
+                 LEFT JOIN t_com_cd tcc ON tdf.data_frme_clas_cd = tcc.com_cd AND tcc.mgnt_item_cd = 'C0018'
+        WHERE tmm.tenant_id = #{tenantId}
+          AND tmm.mling_cd = #{mlingCd}
+          AND tgm.usr_grd = #{usrGrd}
+        ORDER BY tmm.srt_seq_no ASC
+    </select>
+
+    <select id="FRME100SEL02" parameterType="SYSM500VO" resultMap="result2">
+        SELECT *
+        FROM t_opr_noti_info
+        WHERE 1 = 1
+          AND (tenant_id = #{tenantId} OR COALESCE(TRIM(tenant_id), '') = '')
+          AND apcl_dv_cd = '2'
+        ORDER BY noti_dv_cd ASC, opr_noti_no DESC
+    </select>
+
+    <select id="FRME100SEL03" parameterType="SYSM310VO" resultMap="result3">
+        SELECT tgba.*
+             , tdfb.butn_typ_cd
+             , tdfb.butn_nm
+        FROM t_grdby_butn_atht tgba
+                 LEFT JOIN t_data_frme_butn tdfb ON tgba.tenant_id = tdfb.tenant_id AND tgba.data_frm_id = tdfb.data_frm_id AND tgba.butn_seq = tdfb.butn_seq
+        WHERE tgba.tenant_id = #{tenantId}
+          AND tgba.usr_grd = #{usrGrd}
+          AND tdfb.butn_st_cd = '1'
+    </select>
+</mapper>

@@ -1,7 +1,7 @@
 package org.crm.comm.service;
 
 
-import org.crm.comm.VO.COMM150VO;
+import org.crm.comm.model.vo.COMM150VO;
 
 import java.util.List;
 

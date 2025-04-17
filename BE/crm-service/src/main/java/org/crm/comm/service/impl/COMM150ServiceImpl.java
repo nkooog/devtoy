@@ -1,6 +1,6 @@
 package org.crm.comm.service.impl;
 
-import org.crm.comm.VO.COMM150VO;
+import org.crm.comm.model.vo.COMM150VO;
 import org.crm.comm.service.COMM150Service;
 import org.crm.comm.service.dao.COMMCommDAO;
 import org.crm.util.crypto.AES256Crypt;

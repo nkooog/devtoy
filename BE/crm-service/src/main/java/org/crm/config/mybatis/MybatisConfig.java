@@ -40,7 +40,8 @@ public class MybatisConfig {
 		StringBuffer buffer = new StringBuffer();
 
 		buffer.append(" org.crm.lgin.model.vo");
-		buffer.append(" org.crm.sysm.model.vo");
+		buffer.append(",org.crm.sysm.model.vo");
+		buffer.append(",org.crm.frme.model.vo");
 		buffer.append(",org.crm.comm.VO");
 
 		return buffer.toString();

@@ -1,6 +1,6 @@
 package org.crm.comm.service.impl;
 
-import org.crm.comm.VO.COMM140VO;
+import org.crm.comm.model.vo.COMM140VO;
 import org.crm.comm.service.COMM140Service;
 import org.crm.comm.service.dao.COMMCommDAO;
 import jakarta.annotation.Resource;

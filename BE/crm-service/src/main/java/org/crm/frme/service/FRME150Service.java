@@ -1,24 +1,24 @@
-package org.crm.comm.service;
+package org.crm.frme.service;
 
-import org.crm.comm.model.vo.COMM140VO;
+
+import org.crm.frme.model.vo.FRME150VO;
 
 import java.util.List;
 
 /***********************************************************************************************
-* Program Name : 영업일관리 Service
-* Creator      : sjyang
-* Create Date  : 2022.12.26
-* Description  : 공통 서비스
+* Program Name : 즐겨찾기메뉴 팝업 Service
+* Creator      : 이민호
+* Create Date  : 2022.02.03
+* Description  : 즐겨찾기메뉴 팝업
 * Modify Desc  :
 * -----------------------------------------------------------------------------------------------
 * Date         | Updater        | Remark
 * -----------------------------------------------------------------------------------------------
-* 2022.12.26     sjyang            최초생성
+* 2022.02.03     이민호           최초생성
 ************************************************************************************************/
-public interface COMM140Service {
+public interface FRME150Service {
 	
-	List<COMM140VO> COMM140SEL01(COMM140VO vo) throws Exception;
-	
-	int COMM140UPT01(List<COMM140VO> vo) throws Exception;
-	
+	List<FRME150VO> FRME150SEL01(FRME150VO vo) throws Exception;
+	int FRME150INS01(FRME150VO vo) throws Exception;
+	int FRME150DEL01(FRME150VO vo) throws Exception;
 }

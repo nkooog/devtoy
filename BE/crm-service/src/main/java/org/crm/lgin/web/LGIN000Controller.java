@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.crm.comm.VO.CommResponse;
+import org.crm.comm.model.vo.CommResponse;
 import org.crm.config.jwt.JwtToken;
 import org.crm.config.jwt.JwtTokenProvider;
 import org.crm.config.redis.RedisService;

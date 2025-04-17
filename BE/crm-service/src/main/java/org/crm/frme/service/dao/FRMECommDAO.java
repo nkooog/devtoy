@@ -1,4 +1,4 @@
-package org.crm.sysm.model.service.dao;
+package org.crm.frme.service.dao;
 
 import org.apache.ibatis.session.SqlSession;
 import org.crm.comm.MapperTemplate;
@@ -6,40 +6,39 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository("SYSM110DAO")
-public class SYSM110DAO<T> extends MapperTemplate<T> {
-
-	public SYSM110DAO(SqlSession session) {
+@Repository("FRMECommDAO")
+public class FRMECommDAO extends MapperTemplate {
+	public FRMECommDAO(SqlSession session) {
 		super(session);
 	}
 
 	@Override
-	public int selectByCount(String queryId, T clazz) {
+	public int selectByCount(String queryId, Object clazz) {
 		return super.selectByCount(queryId, clazz);
 	}
 
 	@Override
-	public <T1> T1 selectByOne(String queryId, T1 clazz) {
+	public Object selectByOne(String queryId, Object clazz) {
 		return super.selectByOne(queryId, clazz);
 	}
 
 	@Override
-	public <T1> List<T1> selectByList(String queryId, T1 clazz) {
+	public List selectByList(String queryId, Object clazz) {
 		return super.selectByList(queryId, clazz);
 	}
 
 	@Override
-	public int sqlInsert(String queryId, T clazz) {
+	public int sqlInsert(String queryId, Object clazz) {
 		return super.sqlInsert(queryId, clazz);
 	}
 
 	@Override
-	public int sqlDelete(String queryId, T clazz) {
+	public int sqlDelete(String queryId, Object clazz) {
 		return super.sqlDelete(queryId, clazz);
 	}
 
 	@Override
-	public int sqlUpdate(String queryId, T clazz) {
+	public int sqlUpdate(String queryId, Object clazz) {
 		return super.sqlUpdate(queryId, clazz);
 	}
 }
