@@ -550,7 +550,8 @@ const MAINFRAME = (function() {
 	})();
 
 	function fnSessionCheck(callback) {
-		Utils.ajaxSyncCall("/frme/sessionCheck", null, function(sessionCheck) { //시점 문제로 Call-> SyncCall 변경 23.01.09 JDJ
+		// TODO: session ... 처리 방안 ?
+		/*Utils.ajaxSyncCall("/frme/sessionCheck", null, function(sessionCheck) { //시점 문제로 Call-> SyncCall 변경 23.01.09 JDJ
 			if (sessionCheck.result) {
 				if (typeof callback === "function") {
 					callback(sessionCheck);
@@ -560,7 +561,7 @@ const MAINFRAME = (function() {
 					location.href = GLOBAL.contextPath + "/lgin/login";
 				});
 			}
-		});
+		});*/
 	}
 
 	function fnDataFrameCheck(url, callback) {
