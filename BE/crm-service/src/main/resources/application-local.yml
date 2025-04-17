@@ -3,6 +3,7 @@ ncrm:
   newPw: ia1z4pXXQkElt0keiDmmBw==
   separator : ":"
 
+
 jwt:
   secret: 7696df8573fd07575d6debf0c10c51719d64c9402e43da5665f2dc3868107762
   header: Authorization
@@ -56,6 +57,7 @@ eureka:
 server:
   servlet:
     context-path: /bcs/crm
+  port: 8081
 
 
 g-properties-service:
